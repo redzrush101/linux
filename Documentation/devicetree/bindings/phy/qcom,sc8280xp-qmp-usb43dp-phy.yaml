@@ -22,6 +22,10 @@ properties:
           - const: qcom,hawi-qmp-usb3-dp-phy
       - items:
           - enum:
+              - qcom,palawan-qmp-usb3-dp-phy
+          - const: qcom,sm8550-qmp-usb3-dp-phy
+      - items:
+          - enum:
               - qcom,eliza-qmp-usb3-dp-phy
           - const: qcom,sm8650-qmp-usb3-dp-phy
       - items:
@@ -251,6 +255,7 @@ allOf:
               - qcom,glymur-qmp-usb3-dp-phy
               - qcom,hawi-qmp-usb3-dp-phy
               - qcom,nord-qmp-usb3-dp-phy
+              - qcom,palawan-qmp-usb3-dp-phy
               - qcom,sar2130p-qmp-usb3-dp-phy
               - qcom,sc8280xp-qmp-usb43dp-phy
               - qcom,sm6350-qmp-usb3-dp-phy
