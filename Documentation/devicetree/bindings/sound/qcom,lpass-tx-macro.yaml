@@ -23,6 +23,7 @@ properties:
           - enum:
               - qcom,eliza-lpass-tx-macro
               - qcom,kaanapali-lpass-tx-macro
+              - qcom,palawan-lpass-tx-macro
               - qcom,sm8650-lpass-tx-macro
               - qcom,sm8750-lpass-tx-macro
               - qcom,x1e80100-lpass-tx-macro
