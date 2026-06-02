@@ -194,6 +194,11 @@ properties:
 
       - items:
           - enum:
+              - qcom,palawan-qrd
+          - const: qcom,palawan
+
+      - items:
+          - enum:
               - microsoft,dempsey
               - microsoft,makepeace
               - microsoft,moneypenny
