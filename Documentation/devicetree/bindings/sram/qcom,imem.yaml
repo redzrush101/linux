@@ -22,6 +22,7 @@ properties:
           - qcom,msm8226-imem
           - qcom,msm8974-imem
           - qcom,msm8976-imem
+          - qcom,palawan-imem
           - qcom,qcs404-imem
           - qcom,qcs615-imem
           - qcom,qcs8300-imem
