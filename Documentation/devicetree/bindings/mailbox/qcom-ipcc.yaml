@@ -31,6 +31,7 @@ properties:
           - qcom,maili-ipcc
           - qcom,milos-ipcc
           - qcom,nord-ipcc
+          - qcom,palawan-ipcc
           - qcom,qcs8300-ipcc
           - qcom,qdu1000-ipcc
           - qcom,sa8255p-ipcc
