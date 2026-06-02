@@ -50,6 +50,7 @@ properties:
               - qcom,kaanapali-qce
               - qcom,milos-qce
               - qcom,nord-qce
+              - qcom,palawan-qce
               - qcom,qcs615-qce
               - qcom,qcs8300-qce
               - qcom,sa8775p-qce
