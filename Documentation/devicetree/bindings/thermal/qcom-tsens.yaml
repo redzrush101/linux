@@ -64,6 +64,7 @@ properties:
               - qcom,msm8953-tsens
               - qcom,msm8996-tsens
               - qcom,msm8998-tsens
+              - qcom,palawan-tsens
               - qcom,qcm2290-tsens
               - qcom,qcs8300-tsens
               - qcom,qcs615-tsens
