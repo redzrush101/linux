@@ -51,6 +51,7 @@ properties:
               - qcom,kaanapali-sdhci
               - qcom,maili-sdhci
               - qcom,milos-sdhci
+              - qcom,palawan-sdhci
               - qcom,qcm2290-sdhci
               - qcom,qcs404-sdhci
               - qcom,qcs615-sdhci
