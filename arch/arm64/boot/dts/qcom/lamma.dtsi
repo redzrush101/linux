@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Copyright (c) 2026, Alexandr Zubtsov <devizure@mainlining.org>
+ */
+
+/* Lamma is just differently fused Palawan with some minor differences. */
+#include "palawan.dtsi"
+
+&gpu {
+    gpu_opp_table: opp-table {
+		compatible = "operating-points-v2-adreno",
+			     "operating-points-v2";
+
+        opp-255000000 {
+			opp-hz = /bits/ 64 <255000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS_D1>;
+			opp-peak-kBps = <2136718>;
+		};
+
+		opp-353000000 {
+			opp-hz = /bits/ 64 <353000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
+			opp-peak-kBps = <6074218>;
+		};
+
+		opp-500000000 {
+			opp-hz = /bits/ 64 <500000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_SVS>;
+			opp-peak-kBps = <6671875>;
+		};
+
+		opp-633000000 {
+			opp-hz = /bits/ 64 <633000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_SVS_L1>;
+			opp-peak-kBps = <12449218>;
+		};
+
+		opp-684000000 {
+			opp-hz = /bits/ 64 <684000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_SVS_L2>;
+			opp-peak-kBps = <12449218>;
+		};
+
+		opp-736000000 {
+			opp-hz = /bits/ 64 <736000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_NOM>;
+			opp-peak-kBps = <12449218>;
+		};
+
+		opp-835000000 {
+			opp-hz = /bits/ 64 <835000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_NOM_L1>;
+			opp-peak-kBps = <14398437>;
+		};
+
+		opp-900000000 {
+			opp-hz = /bits/ 64 <900000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_TURBO>;
+			opp-peak-kBps = <16500000>;
+		};
+
+		opp-950000000 {
+			opp-hz = /bits/ 64 <950000000>;
+			opp-level = <RPMH_REGULATOR_LEVEL_TURBO_L0>;
+			opp-peak-kBps = <16500000>;
+		};
+    };
+};
+
+&gmu {
+    compatible = "qcom,adreno-gmu-732.0", "qcom,adreno-gmu";
+};
+
+&llcc {
+    compatible = "qcom,lamma-llcc";
+};
