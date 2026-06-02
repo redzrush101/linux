@@ -43,6 +43,7 @@ properties:
               - qcom,maili-smmu-500
               - qcom,milos-smmu-500
               - qcom,nord-smmu-500
+              - qcom,palawan-smmu-500
               - qcom,qcm2290-smmu-500
               - qcom,qcs615-smmu-500
               - qcom,qcs8300-smmu-500
@@ -102,6 +103,7 @@ properties:
               - qcom,hawi-smmu-500
               - qcom,kaanapali-smmu-500
               - qcom,milos-smmu-500
+              - qcom,palawan-smmu-500
               - qcom,qcm2290-smmu-500
               - qcom,qcs615-smmu-500
               - qcom,qcs8300-smmu-500
@@ -546,6 +548,7 @@ allOf:
           items:
             - enum:
                 - qcom,milos-smmu-500
+                - qcom,palawan-smmu-500
                 - qcom,sar2130p-smmu-500
                 - qcom,shikra-smmu-500
                 - qcom,sm8550-smmu-500
