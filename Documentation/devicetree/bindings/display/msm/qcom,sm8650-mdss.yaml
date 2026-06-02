@@ -17,7 +17,9 @@ $ref: /schemas/display/msm/mdss-common.yaml#
 
 properties:
   compatible:
-    const: qcom,sm8650-mdss
+    items:
+      - const: qcom,palawan-mdss
+      - const: qcom,sm8650-mdss
 
   clocks:
     items:
@@ -44,14 +46,20 @@ patternProperties:
     additionalProperties: true
     properties:
       compatible:
-        const: qcom,sm8650-dpu
+        items:
+          - const: qcom,palawan-dpu
+          - const: qcom,sm8650-dpu
 
   "^displayport-controller@[0-9a-f]+$":
     type: object
     additionalProperties: true
     properties:
       compatible:
-        const: qcom,sm8650-dp
+        oneOF:
+          - items:
+              - enum:
+                  - qcom,palawan-dp
+          - const: qcom,sm8650-dp
 
   "^dsi@[0-9a-f]+$":
     type: object
@@ -59,6 +67,7 @@ patternProperties:
     properties:
       compatible:
         items:
+          - const: qcom,palawan-dsi-ctrl
           - const: qcom,sm8650-dsi-ctrl
           - const: qcom,mdss-dsi-ctrl
 
@@ -67,7 +76,11 @@ patternProperties:
     additionalProperties: true
     properties:
       compatible:
-        const: qcom,sm8650-dsi-phy-4nm
+        oneOF:
+          - items:
+              - enum:
+                  - qcom,palawan-dsi-phy-4nm
+          - const: qcom,sm8650-dsi-phy-4nm
 
 required:
   - compatible
