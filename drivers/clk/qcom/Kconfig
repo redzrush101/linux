@@ -244,6 +244,14 @@ config CLK_NORD_GPUCC
 	  Say Y if you want to support graphics controller devices and
 	  functionality such as 3D graphics.
 
+config CLK_PALAWAN_CAMCC
+	tristate "Palawan Camera Clock Controller"
+	depends on ARM64 || COMPILE_TEST
+	select CLK_PALAWAN_GCC
+	help
+	  Support for the camera clock controller on Palawan devices.
+	  Say Y if you want to support camera devices and camera functionality.
+
 config CLK_X1E80100_CAMCC
 	tristate "X1E80100 Camera Clock Controller"
 	depends on ARM64 || COMPILE_TEST
