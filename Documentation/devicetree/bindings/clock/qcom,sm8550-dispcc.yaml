@@ -28,6 +28,7 @@ properties:
       - qcom,kaanapali-dispcc
       - qcom,nord-dispcc0
       - qcom,nord-dispcc1
+      - qcom,palawan-dispcc
       - qcom,sar2130p-dispcc
       - qcom,sm8550-dispcc
       - qcom,sm8650-dispcc
