@@ -266,6 +266,17 @@ config CLK_PALAWAN_GCC
 	  Say Y or M to enable peripheral clocks on Palawan platforms.
 
 
+config CLK_PALAWAN_GPUCC
+	tristate "Palawan Graphics Clock Controller"
+	depends on ARM64 || COMPILE_TEST
+	select CLK_PALAWAN_GCC
+	help
+	  Support the graphics clock controller on Qualcomm Palawan.
+	  This provides clocks, resets and power domains for the GPU
+	  and the graphics management unit.
+	  Say Y or M to enable graphics clocks on Palawan platforms.
+
+
 config CLK_X1E80100_CAMCC
 	tristate "X1E80100 Camera Clock Controller"
 	depends on ARM64 || COMPILE_TEST
