@@ -17,6 +17,7 @@ description: |
   See also:
   - include/dt-bindings/clock/qcom,kaanapali-dispcc.h
   - include/dt-bindings/clock/qcom,nord-dispcc.h
+  - include/dt-bindings/clock/qcom,palawan-dispcc.h
   - include/dt-bindings/clock/qcom,sm8550-dispcc.h
   - include/dt-bindings/clock/qcom,sm8650-dispcc.h
   - include/dt-bindings/clock/qcom,sm8750-dispcc.h
@@ -28,6 +29,7 @@ properties:
       - qcom,kaanapali-dispcc
       - qcom,nord-dispcc0
       - qcom,nord-dispcc1
+      - qcom,palawan-dispcc
       - qcom,sar2130p-dispcc
       - qcom,sm8550-dispcc
       - qcom,sm8650-dispcc
