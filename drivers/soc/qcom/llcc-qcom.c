@@ -1014,6 +1014,151 @@ static const struct llcc_slice_config kaanapali_data[] = {
 	   },
 };
 
+static const struct llcc_slice_config lamma_data[] = {
+	{
+		.usecase_id = LLCC_CPUSS,
+		.slice_id = 1,
+		.max_cap = 3200,
+		.priority = 0,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+		.activate_on_init = true,
+	}, {
+		.usecase_id = LLCC_VIDSC0,
+		.slice_id = 2,
+		.max_cap = 128,
+		.priority = 3,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_AUDIO,
+		.slice_id = 6,
+		.max_cap = 256,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_MDMHPGRW,
+		.slice_id = 25,
+		.max_cap = 1024,
+		.priority = 3,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_GPUHTW,
+		.slice_id = 11,
+		.max_cap = 256,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_GPU,
+		.slice_id = 9,
+		.max_cap = 3200,
+		.priority = 1,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+		.write_scid_en = true,
+		.write_scid_cacheable_en = true,
+	}, {
+		.usecase_id = LLCC_MMUHWT,
+		.slice_id = 18,
+		.max_cap = 512,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+		.activate_on_init = true,
+	}, {
+		.usecase_id = LLCC_DISP,
+		.slice_id = 16,
+		.max_cap = 3584,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 2,
+	}, {
+		.usecase_id = LLCC_MDMHPFX,
+		.slice_id = 24,
+		.max_cap = 1024,
+		.priority = 3,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_MDMPNG,
+		.slice_id = 27,
+		.max_cap = 256,
+		.priority = 3,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_MODPE,
+		.slice_id = 29,
+		.max_cap = 64,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3c00,
+		.cache_mode = 0,
+		.alloc_oneway_en = true,
+	}, {
+		.usecase_id = LLCC_WRCACHE,
+		.slice_id = 31,
+		.max_cap = 512,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+		.activate_on_init = true,
+	}, {
+		.usecase_id = LLCC_CAMEXP0,
+		.slice_id = 4,
+		.max_cap = 256,
+		.priority = 3,
+		.fixed_size = true,
+		.bonus_ways = 0xf,
+		.cache_mode = 0,
+	}, {
+		.usecase_id = LLCC_CAMEXP1,
+		.slice_id = 7,
+		.max_cap = 1536,
+		.priority = 2,
+		.fixed_size = true,
+		.bonus_ways = 0x3ff0,
+		.cache_mode = 2,
+	}, {
+		.usecase_id = LLCC_LCPDARE,
+		.slice_id = 30,
+		.max_cap = 128,
+		.priority = 3,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 0,
+		.activate_on_init = true,
+		.alloc_oneway_en = true,
+	}, {
+		.usecase_id = LLCC_AENPU,
+		.slice_id = 3,
+		.max_cap = 2048,
+		.priority = 1,
+		.fixed_size = true,
+		.bonus_ways = 0x3fff,
+		.cache_mode = 2,
+	}, {
+		.usecase_id = LLCC_ISLAND1,
+		.slice_id = 12,
+		.max_cap = 2048,
+		.priority = 7,
+		.fixed_size = true,
+		.res_ways = 0x0,
+		.cache_mode = 0,
+	},
+};
+
 static const struct llcc_slice_config palawan_data[] = {
 	{
 		.usecase_id = LLCC_CPUSS,
@@ -4591,6 +4736,15 @@ static const struct qcom_llcc_config glymur_cfg[] = {
 	},
 };
 
+static const struct qcom_llcc_config lamma_cfg[] = {
+	{
+		.sct_data       = lamma_data,
+		.size           = ARRAY_SIZE(lamma_data),
+		.reg_offset	= llcc_v2_1_reg_offset,
+		.edac_reg_offset = &llcc_v2_1_edac_reg_offset,
+	},
+};
+
 static const struct qcom_llcc_config palawan_cfg[] = {
 	{
 		.sct_data       = palawan_data,
@@ -4865,6 +5019,11 @@ static const struct qcom_sct_config kaanapali_cfgs = {
 static const struct qcom_sct_config glymur_cfgs = {
 	.llcc_config	= glymur_cfg,
 	.num_config	= ARRAY_SIZE(glymur_cfg),
+};
+
+static const struct qcom_sct_config lamma_cfgs = {
+	.llcc_config	= lamma_cfg,
+	.num_config	= ARRAY_SIZE(lamma_cfg),
 };
 
 static const struct qcom_sct_config palawan_cfgs = {
@@ -5810,6 +5969,7 @@ static const struct of_device_id qcom_llcc_of_match[] = {
 	{ .compatible = "qcom,hawi-llcc", .data = &hawi_sct_cfgs },
 	{ .compatible = "qcom,ipq5424-llcc", .data = &ipq5424_cfgs},
 	{ .compatible = "qcom,kaanapali-llcc", .data = &kaanapali_cfgs},
+	{ .compatible = "qcom,lamma-llcc", .data = &lamma_cfgs },
 	{ .compatible = "qcom,palawan-llcc", .data = &palawan_cfgs },
 	{ .compatible = "qcom,qcs615-llcc", .data = &qcs615_cfgs},
 	{ .compatible = "qcom,qcs8300-llcc", .data = &qcs8300_cfgs},
