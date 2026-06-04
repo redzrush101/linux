@@ -33,6 +33,7 @@ properties:
       - qcom,kaanapali-videocc
       - qcom,maili-videocc
       - qcom,nord-videocc
+      - qcom,palawan-videocc
       - qcom,sm8450-videocc
       - qcom,sm8475-videocc
       - qcom,sm8550-videocc
@@ -74,6 +75,7 @@ allOf:
           not:
             contains:
               enum:
+                - qcom,palawan-videocc
                 - qcom,sm8475-videocc
                 - qcom,sm8650-videocc
     then:
