@@ -72,6 +72,16 @@ config PINCTRL_MILOS_LPASS_LPI
 	  (Low Power Island) found on the Qualcomm Technologies Inc Milos
 	  platform.
 
+config PINCTRL_PALAWAN_LPASS_LPI
+	tristate "Qualcomm Technologies Inc Palawan LPASS LPI pin controller driver"
+	depends on ARM64 || COMPILE_TEST
+	depends on PINCTRL_LPASS_LPI
+	help
+	  This is the pinctrl, pinmux, pinconf and gpiolib driver for the
+	  Qualcomm Technologies Inc LPASS (Low Power Audio SubSystem) LPI
+	  (Low Power Island) found on the Qualcomm Technologies Inc Palawan
+	  platform.
+
 config PINCTRL_SC7280_LPASS_LPI
 	tristate "Qualcomm SC7280 and SM8350 LPASS LPI pin controller driver"
 	depends on ARM64 || COMPILE_TEST
