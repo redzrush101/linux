@@ -252,6 +252,15 @@ config CLK_PALAWAN_CAMCC
 	  Support for the camera clock controller on Palawan devices.
 	  Say Y if you want to support camera devices and camera functionality.
 
+config CLK_PALAWAN_GCC
+	tristate "Palawan Global Clock Controller"
+	depends on ARM64 || COMPILE_TEST
+	select QCOM_GDSC
+	help
+	  Support for the global clock controller on Palawan devices.
+	  Say Y if you want to use peripheral devices such as UART,
+	  SPI, I2C, USB, SD/UFS, PCIe etc.
+
 config CLK_X1E80100_CAMCC
 	tristate "X1E80100 Camera Clock Controller"
 	depends on ARM64 || COMPILE_TEST
