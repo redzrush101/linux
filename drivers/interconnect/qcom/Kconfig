@@ -57,6 +57,18 @@ config INTERCONNECT_QCOM_MAILI
 	  This is a driver for the Qualcomm Network-on-Chip on maili-based
 	  platforms.
 
+config INTERCONNECT_QCOM_PALAWAN
+	tristate "Qualcomm Palawan interconnect driver"
+	depends on INTERCONNECT_QCOM_RPMH_POSSIBLE
+	select INTERCONNECT_QCOM_RPMH
+	select INTERCONNECT_QCOM_BCM_VOTER
+	help
+	  This driver provides the Qualcomm Palawan Network-on-Chip.
+	  It registers interconnect paths between the application processor,
+	  memory and peripherals and votes for the required bandwidth.
+	  Say Y or M to enable bandwidth management on Palawan platforms.
+
+
 config INTERCONNECT_QCOM_MSM8909
 	tristate "Qualcomm MSM8909 interconnect driver"
 	depends on INTERCONNECT_QCOM
