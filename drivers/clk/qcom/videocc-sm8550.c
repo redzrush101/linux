@@ -134,6 +134,18 @@ static const struct freq_tbl ftbl_video_cc_mvs0_clk_src[] = {
 	{ }
 };
 
+static const struct freq_tbl ftbl_video_cc_mvs0_clk_src_palawan[] = {
+	F(576000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(633000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(720000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(1014000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(1098000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(1113000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(1332000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	F(1600000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
+	{ }
+};
+
 static const struct freq_tbl ftbl_video_cc_mvs0_clk_src_sm8650[] = {
 	F(588000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
 	F(900000000, P_VIDEO_CC_PLL0_OUT_MAIN, 1, 0, 0),
@@ -575,6 +587,7 @@ static const struct qcom_cc_desc video_cc_sm8550_desc = {
 };
 
 static const struct of_device_id video_cc_sm8550_match_table[] = {
+	{ .compatible = "qcom,palawan-videocc" },
 	{ .compatible = "qcom,sm8550-videocc" },
 	{ .compatible = "qcom,sm8650-videocc" },
 	{ .compatible = "qcom,x1e80100-videocc" },
@@ -584,6 +597,38 @@ MODULE_DEVICE_TABLE(of, video_cc_sm8550_match_table);
 
 static int video_cc_sm8550_probe(struct platform_device *pdev)
 {
+	if (of_device_is_compatible(pdev->dev.of_node, "qcom,palawan-videocc")) {
+		video_cc_pll0_config.l = 0x1e;
+		video_cc_pll0_config.alpha = 0x0;
+		video_cc_pll1_config.l = 0x2b;
+		video_cc_pll1_config.alpha = 0xc000;
+
+		video_cc_mvs0_clk_src.freq_tbl = ftbl_video_cc_mvs0_clk_src_palawan;
+		video_cc_mvs1_clk_src.freq_tbl = ftbl_video_cc_mvs1_clk_src_sm8650;
+
+		video_cc_sm8550_clocks[VIDEO_CC_MVS0_SHIFT_CLK] = &video_cc_mvs0_shift_clk.clkr;
+		video_cc_sm8550_clocks[VIDEO_CC_MVS0C_SHIFT_CLK] = &video_cc_mvs0c_shift_clk.clkr;
+		video_cc_sm8550_clocks[VIDEO_CC_MVS1_SHIFT_CLK] = &video_cc_mvs1_shift_clk.clkr;
+		video_cc_sm8550_clocks[VIDEO_CC_MVS1C_SHIFT_CLK] = &video_cc_mvs1c_shift_clk.clkr;
+		video_cc_sm8550_clocks[VIDEO_CC_XO_CLK_SRC] = &video_cc_xo_clk_src.clkr;
+
+		video_cc_mvs0_shift_clk.halt_reg = 0x8144;
+		video_cc_mvs0_shift_clk.hwcg_reg = 0x8144;
+		video_cc_mvs0_shift_clk.clkr.enable_reg = 0x8144;
+
+		video_cc_mvs0c_shift_clk.halt_reg = 0x8148;
+		video_cc_mvs0c_shift_clk.hwcg_reg = 0x8148;
+		video_cc_mvs0c_shift_clk.clkr.enable_reg = 0x8148;
+
+		video_cc_mvs1_shift_clk.halt_reg = 0x814c;
+		video_cc_mvs1_shift_clk.hwcg_reg = 0x814c;
+		video_cc_mvs1_shift_clk.clkr.enable_reg = 0x814c;
+
+		video_cc_mvs1c_shift_clk.halt_reg = 0x8150;
+		video_cc_mvs1c_shift_clk.hwcg_reg = 0x8150;
+		video_cc_mvs1c_shift_clk.clkr.enable_reg = 0x8150;
+	}
+
 	if (of_device_is_compatible(pdev->dev.of_node, "qcom,x1e80100-videocc")) {
 		video_cc_pll0_config.l = 0x1e;
 		video_cc_pll0_config.alpha = 0x0000;
