@@ -285,6 +285,16 @@ config PINCTRL_NORD
 	  This is the pinctrl, pinmux and pinconf driver for the Qualcomm
 	  TLMM block found on the Qualcomm NORD platforms.
 
+config PINCTRL_PALAWAN
+	tristate "Qualcomm Technologies Inc Palawan pin controller driver"
+	depends on ARM64 || COMPILE_TEST
+	help
+	  This driver provides pin control for the Qualcomm Palawan TLMM.
+	  It supports pin multiplexing, pin configuration and GPIO access
+	  for peripherals connected to the top-level mode multiplexer.
+	  Say Y or M to enable these pins on Palawan platforms.
+
+
 config PINCTRL_QCM2290
 	tristate "Qualcomm QCM2290 pin controller driver"
 	depends on ARM64 || COMPILE_TEST
