@@ -32,6 +32,7 @@ properties:
               - qcom,kaanapali-tcsr
               - qcom,milos-tcsr
               - qcom,nord-tcsrcc
+              - qcom,palawan-tcsr
               - qcom,sar2130p-tcsr
               - qcom,sm8550-tcsr
               - qcom,sm8650-tcsr
