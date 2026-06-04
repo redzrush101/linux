@@ -30,6 +30,7 @@ obj-$(CONFIG_PINCTRL_MSM8976)	+= pinctrl-msm8976.o
 obj-$(CONFIG_PINCTRL_MSM8994)   += pinctrl-msm8994.o
 obj-$(CONFIG_PINCTRL_MSM8996)   += pinctrl-msm8996.o
 obj-$(CONFIG_PINCTRL_MSM8998)   += pinctrl-msm8998.o
+obj-$(CONFIG_PINCTRL_PALAWAN) += pinctrl-palawan.o
 obj-$(CONFIG_PINCTRL_QCM2290)	+= pinctrl-qcm2290.o
 obj-$(CONFIG_PINCTRL_QCS404)	+= pinctrl-qcs404.o
 obj-$(CONFIG_PINCTRL_QCS615)    += pinctrl-qcs615.o
