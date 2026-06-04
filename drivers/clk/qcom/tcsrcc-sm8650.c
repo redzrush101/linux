@@ -148,6 +148,7 @@ static const struct qcom_cc_desc tcsr_cc_sm8650_desc = {
 
 static const struct of_device_id tcsr_cc_sm8650_match_table[] = {
 	{ .compatible = "qcom,milos-tcsr" },
+	{ .compatible = "qcom,palawan-tcsr" },
 	{ .compatible = "qcom,sm8650-tcsr" },
 	{ }
 };
