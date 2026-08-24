@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/pinctrl/mediatek,mt6765-pinctrl.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: MediaTek MT6765 Pin Controller
+
+maintainers:
+  - Sean Wang <sean.wang@kernel.org>
+
+properties:
+  compatible:
+    const: mediatek,mt6765-pinctrl
+
+  reg:
+    items:
+      - description: GPIO controller registers
+      - description: IO configuration bank 1
+      - description: IO configuration bank 2
+      - description: IO configuration bank 3
+      - description: IO configuration bank 4
+      - description: IO configuration bank 5
+      - description: IO configuration bank 6
+      - description: IO configuration bank 7
+      - description: External interrupt controller registers
+
+  reg-names:
+    items:
+      - const: iocfg0
+      - const: iocfg1
+      - const: iocfg2
+      - const: iocfg3
+      - const: iocfg4
+      - const: iocfg5
+      - const: iocfg6
+      - const: iocfg7
+      - const: eint
+
+  gpio-controller: true
+
+  '#gpio-cells':
+    const: 2
+
+  gpio-ranges:
+    maxItems: 1
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 2
+
+  interrupts:
+    maxItems: 1
+
+patternProperties:
+  '-pins$':
+    type: object
+    additionalProperties: false
+    patternProperties:
+      '^pins':
+        type: object
+        $ref: /schemas/pinctrl/pincfg-node.yaml
+        properties:
+          pinmux: true
+
+          bias-pull-up: true
+
+          bias-pull-down: true
+
+          input-enable: true
+
+          drive-strength:
+            minimum: 0
+            maximum: 7
+        required:
+          - pinmux
+        additionalProperties: false
+
+required:
+  - compatible
+  - reg
+  - reg-names
+  - gpio-controller
+  - '#gpio-cells'
+  - gpio-ranges
+  - interrupt-controller
+  - '#interrupt-cells'
+  - interrupts
+
+additionalProperties: false

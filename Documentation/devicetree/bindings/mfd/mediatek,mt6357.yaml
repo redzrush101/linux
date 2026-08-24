@@ -16,6 +16,7 @@ description: |
   USB battery charging, fuel gauge, RTC
 
   This is a multifunction device with the following sub modules:
+  - Auxiliary ADC
   - Regulator
   - RTC
   - Keys
@@ -54,6 +55,11 @@ properties:
     enum: [1700000, 1800000, 1900000, 2000000,
            2100000, 2500000, 2600000, 2700000]
     default: 1700000
+
+  adc:
+    $ref: /schemas/iio/adc/mediatek,mt6359-auxadc.yaml
+    unevaluatedProperties: false
+    description: PMIC auxiliary analog-to-digital converter.
 
   regulators:
     type: object

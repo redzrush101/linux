@@ -70,6 +70,7 @@ properties:
     oneOf:
       - items:
           - enum:
+              - mediatek,mt6765-tphy
               - mediatek,mt2701-tphy
               - mediatek,mt7623-tphy
               - mediatek,mt7622-tphy
