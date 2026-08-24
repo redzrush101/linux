@@ -15,8 +15,10 @@
 #include "clk-mtk.h"
 #include "clk-mux.h"
 #include "clk-pll.h"
+#include "reset.h"
 
 #include <dt-bindings/clock/mt6765-clk.h>
+#include <dt-bindings/reset/mediatek,mt6765-infracfg.h>
 
 /*fmeter div select 4*/
 #define _DIV4_ 1
@@ -558,6 +560,7 @@ static const struct mtk_gate ifr_clks[] = {
 	/* INFRA_TOPAXI */
 	/* INFRA PERI */
 	/* INFRA mode 0 */
+	GATE_IFR2(CLK_IFR_PMIC_AP, "ifr_pmic_ap", "axi_ck", 1),
 	GATE_IFR2(CLK_IFR_ICUSB, "ifr_icusb", "axi_ck", 8),
 	GATE_IFR2(CLK_IFR_GCE, "ifr_gce", "axi_ck", 9),
 	GATE_IFR2(CLK_IFR_THERM, "ifr_therm", "axi_ck", 10),
@@ -624,6 +627,20 @@ static const struct mtk_gate ifr_clks[] = {
 	GATE_IFR5(CLK_IFR_CCIF2_MD, "ifr_ccif2_md", "axi_ck", 19),
 	GATE_IFR5(CLK_IFR_CCIF3_AP, "ifr_ccif3_ap", "axi_ck", 20),
 	GATE_IFR5(CLK_IFR_CCIF3_MD, "ifr_ccif3_md", "axi_ck", 21),
+};
+
+static u16 infra_rst_ofs[] = { 0x140 };
+
+static u16 infra_rst_idx_map[] = {
+	[MT6765_INFRA_RST2_PMIC_WRAP] = 0 * RST_NR_PER_BANK + 0,
+};
+
+static const struct mtk_clk_rst_desc infra_rst_desc = {
+	.version = MTK_RST_SET_CLR,
+	.rst_bank_ofs = infra_rst_ofs,
+	.rst_bank_nr = ARRAY_SIZE(infra_rst_ofs),
+	.rst_idx_map = infra_rst_idx_map,
+	.rst_idx_map_nr = ARRAY_SIZE(infra_rst_idx_map),
 };
 
 /* additional CCF control for mipi26M race condition(disp/camera) */
@@ -808,6 +825,11 @@ static int clk_mt6765_ifr_probe(struct platform_device *pdev)
 	base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(base))
 		return PTR_ERR(base);
+
+	r = mtk_register_reset_controller_with_dev(&pdev->dev,
+						   &infra_rst_desc);
+	if (r)
+		return r;
 
 	clk_data = mtk_alloc_clk_data(CLK_IFR_NR_CLK);
 	if (!clk_data)
