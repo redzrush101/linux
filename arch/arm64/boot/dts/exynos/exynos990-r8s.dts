@@ -63,6 +63,13 @@
 		#size-cells = <2>;
 		ranges;
 
+		ramoops@eb308000 {
+			compatible = "ramoops";
+			reg = <0 0xeb308000 0 0x8000>;
+			record-size = <0x4000>;
+			pmsg-size = <0x4000>;
+		};
+
 		cont_splash_mem: framebuffer@f1000000 {
 			reg = <0 0xf1000000 0 0x13c6800>;
 			no-map;
