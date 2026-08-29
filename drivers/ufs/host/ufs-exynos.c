@@ -101,6 +101,7 @@
 #define UFS_EXYNOSAUTOV920_RD_SHARABLE	BIT(2)
 #define UFS_EXYNOSAUTOV920_SHARABLE	(UFS_EXYNOSAUTOV920_WR_SHARABLE |\
 					 UFS_EXYNOSAUTOV920_RD_SHARABLE)
+#define UFS_EXYNOS990_SHARABLE		GENMASK(23, 22)
 #define UFS_GS101_WR_SHARABLE		BIT(1)
 #define UFS_GS101_RD_SHARABLE		BIT(0)
 #define UFS_GS101_SHARABLE		(UFS_GS101_WR_SHARABLE | \
@@ -262,19 +263,29 @@ static int exynosauto_ufs_post_hce_enable(struct exynos_ufs *ufs)
 	return 0;
 }
 
-static int exynosauto_ufs_pre_link(struct exynos_ufs *ufs)
+static inline u32 get_mclk_period_unipro_18(struct exynos_ufs *ufs)
+{
+	return 16 * 1000 * 1000000UL / ufs->mclk_rate;
+}
+
+static int exynosauto_ufs_pre_link_common(struct exynos_ufs *ufs,
+					  bool is_exynos990)
 {
 	struct ufs_hba *hba = ufs->hba;
 	int i;
-	u32 tx_line_reset_period, rx_line_reset_period;
+	u32 tx_line_reset_period, rx_line_reset_period, clk_period;
 
 	rx_line_reset_period = (RX_LINE_RESET_TIME * ufs->mclk_rate) / NSEC_PER_MSEC;
 	tx_line_reset_period = (TX_LINE_RESET_TIME * ufs->mclk_rate) / NSEC_PER_MSEC;
+	if (is_exynos990)
+		clk_period = DIV_ROUND_CLOSEST(NSEC_PER_SEC, ufs->mclk_rate);
+	else
+		clk_period = DIV_ROUND_UP(NSEC_PER_SEC, ufs->mclk_rate);
 
 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x40);
 	for_each_ufs_rx_lane(ufs, i) {
 		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(VND_RX_CLK_PRD, i),
-			       DIV_ROUND_UP(NSEC_PER_SEC, ufs->mclk_rate));
+			       clk_period);
 		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(VND_RX_CLK_PRD_EN, i), 0x0);
 
 		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(VND_RX_LINERESET_VALUE2, i),
@@ -291,7 +302,7 @@ static int exynosauto_ufs_pre_link(struct exynos_ufs *ufs)
 
 	for_each_ufs_tx_lane(ufs, i) {
 		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(VND_TX_CLK_PRD, i),
-			       DIV_ROUND_UP(NSEC_PER_SEC, ufs->mclk_rate));
+			       clk_period);
 		/* Not to affect VND_TX_LINERESET_PVALUE to VND_TX_CLK_PRD */
 		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(VND_TX_CLK_PRD_EN, i),
 			       0x02);
@@ -305,15 +316,37 @@ static int exynosauto_ufs_pre_link(struct exynos_ufs *ufs)
 
 		/* TX PWM Gear Capability / PWM_G1_ONLY */
 		ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x04, i), 0x1);
+		if (is_exynos990)
+			ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x7f, i), 0x0);
 	}
 
 	ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x0);
 
 	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0x0);
 
-	ufshcd_dme_set(hba, UIC_ARG_MIB(0xa011), 0x8000);
+	if (is_exynos990) {
+		ufshcd_dme_set(hba, UIC_ARG_MIB(N_DEVICEID), 0x0);
+		ufshcd_dme_set(hba, UIC_ARG_MIB(N_DEVICEID_VALID), 0x1);
+		ufshcd_dme_set(hba, UIC_ARG_MIB(T_PEERDEVICEID), 0x1);
+		ufshcd_dme_set(hba, UIC_ARG_MIB(T_CONNECTIONSTATE),
+			       CPORT_CONNECTED);
+		unipro_writel(ufs, get_mclk_period_unipro_18(ufs),
+			      COMP_CLK_PERIOD);
+	} else {
+		ufshcd_dme_set(hba, UIC_ARG_MIB(0xa011), 0x8000);
+	}
 
 	return 0;
+}
+
+static int exynosauto_ufs_pre_link(struct exynos_ufs *ufs)
+{
+	return exynosauto_ufs_pre_link_common(ufs, false);
+}
+
+static int exynos990_ufs_pre_link(struct exynos_ufs *ufs)
+{
+	return exynosauto_ufs_pre_link_common(ufs, true);
 }
 
 static int exynosauto_ufs_pre_pwr_change(struct exynos_ufs *ufs,
@@ -2005,11 +2038,6 @@ static int fsd_ufs_suspend(struct exynos_ufs *ufs)
 	return 0;
 }
 
-static inline u32 get_mclk_period_unipro_18(struct exynos_ufs *ufs)
-{
-	return (16 * 1000 * 1000000UL / ufs->mclk_rate);
-}
-
 static int gs101_ufs_pre_link(struct exynos_ufs *ufs)
 {
 	struct ufs_hba *hba = ufs->hba;
@@ -2174,6 +2202,32 @@ static struct exynos_ufs_uic_attr exynos7_uic_attr = {
 	.pa_dbg_opt_suite1_off		= PA_DBG_OPTION_SUITE,
 };
 
+static struct exynos_ufs_uic_attr exynos990_uic_attr = {
+	.tx_trailingclks		= 0x10,
+	.tx_dif_p_nsec			= 3000000,
+	.tx_dif_n_nsec			= 1000000,
+	.tx_high_z_cnt_nsec		= 20000,
+	.tx_base_unit_nsec		= 100000,
+	.tx_gran_unit_nsec		= 4000,
+	.tx_sleep_cnt			= 1000,
+	.tx_min_activatetime		= 0xa,
+	.rx_filler_enable		= 0x2,
+	.rx_dif_p_nsec			= 1000000,
+	.rx_hibern8_wait_nsec		= 4000000,
+	.rx_base_unit_nsec		= 100000,
+	.rx_gran_unit_nsec		= 4000,
+	.rx_sleep_cnt			= 1280,
+	.rx_stall_cnt			= 320,
+	.rx_hs_g1_sync_len_cap		= SYNC_LEN_COARSE(0xf),
+	.rx_hs_g2_sync_len_cap		= SYNC_LEN_COARSE(0xf),
+	.rx_hs_g3_sync_len_cap		= SYNC_LEN_COARSE(0xf),
+	.rx_hs_g1_prep_sync_len_cap	= PREP_LEN(0xf),
+	.rx_hs_g2_prep_sync_len_cap	= PREP_LEN(0xf),
+	.rx_hs_g3_prep_sync_len_cap	= PREP_LEN(0xf),
+	.pa_dbg_opt_suite1_val		= 0x30103,
+	.pa_dbg_opt_suite1_off		= PA_DBG_OPTION_SUITE,
+};
+
 static const struct exynos_ufs_drv_data exynosauto_ufs_drvs = {
 	.uic_attr		= &exynos7_uic_attr,
 	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
@@ -2189,6 +2243,21 @@ static const struct exynos_ufs_drv_data exynosauto_ufs_drvs = {
 	.pre_link		= exynosauto_ufs_pre_link,
 	.pre_pwr_change		= exynosauto_ufs_pre_pwr_change,
 	.post_pwr_change	= exynosauto_ufs_post_pwr_change,
+};
+
+static const struct exynos_ufs_drv_data exynos990_ufs_drvs = {
+	.uic_attr		= &exynos990_uic_attr,
+	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
+				  UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR |
+				  UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR |
+				  UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING,
+	.opts			= EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL |
+				  EXYNOS_UFS_OPT_UFSPR_SECURE |
+				  EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR |
+				  EXYNOS_UFS_OPT_TIMER_TICK_SELECT,
+	.iocc_mask		= UFS_EXYNOS990_SHARABLE,
+	.drv_init		= exynosauto_ufs_drv_init,
+	.pre_link		= exynos990_ufs_pre_link,
 };
 
 static const struct exynos_ufs_drv_data exynosauto_ufs_vh_drvs = {
@@ -2314,6 +2383,8 @@ static const struct of_device_id exynos_ufs_of_match[] = {
 	  .data	      = &gs101_ufs_drvs },
 	{ .compatible = "samsung,exynos7-ufs",
 	  .data	      = &exynos_ufs_drvs },
+	{ .compatible = "samsung,exynos990-ufs",
+	  .data	      = &exynos990_ufs_drvs },
 	{ .compatible = "samsung,exynosautov9-ufs",
 	  .data	      = &exynosauto_ufs_drvs },
 	{ .compatible = "samsung,exynosautov9-ufs-vh",
