@@ -50,6 +50,14 @@
 		regulator-name = "dummy_reg";
 	};
 
+	ufs_vcc_reg: regulator-1 {
+		compatible = "regulator-fixed";
+		regulator-name = "ufs-vcc";
+		gpio = <&gpg1 0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+	};
+
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -128,5 +136,15 @@
 };
 
 &usbdrd_phy {
+	status = "okay";
+};
+
+&ufs_0 {
+	vcc-supply = <&ufs_vcc_reg>;
+
+	status = "okay";
+};
+
+&ufs_0_phy {
 	status = "okay";
 };
