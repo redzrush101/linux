@@ -27,8 +27,11 @@ struct samsung_s6e3fc2x01;
 struct samsung_s6e3fc2x01_desc {
 	const struct drm_display_mode *mode;
 	const struct regulator_bulk_data *supplies;
+	const unsigned int *supply_enable_delays_ms;
 	unsigned int num_supplies;
 	unsigned long mode_flags;
+	unsigned long hs_rate;
+	bool has_enable_gpio;
 	void (*reset)(struct samsung_s6e3fc2x01 *ctx);
 	int (*on)(struct samsung_s6e3fc2x01 *ctx);
 	int (*enable)(struct samsung_s6e3fc2x01 *ctx);
@@ -40,6 +43,7 @@ struct samsung_s6e3fc2x01 {
 	struct mipi_dsi_device *dsi;
 	const struct samsung_s6e3fc2x01_desc *desc;
 	struct regulator_bulk_data *supplies;
+	struct gpio_desc *enable_gpio;
 	struct gpio_desc *reset_gpio;
 };
 
@@ -47,6 +51,15 @@ static const struct regulator_bulk_data ams641rw_supplies[] = {
 	{ .supply = "vddio" },
 	{ .supply = "vci" },
 	{ .supply = "poc" },
+};
+
+static const struct regulator_bulk_data ams670ta01_supplies[] = {
+	{ .supply = "vddio" },
+	{ .supply = "vci" },
+};
+
+static const unsigned int ams670ta01_supply_enable_delays_ms[] = {
+	20, 0,
 };
 
 static inline
@@ -216,6 +229,120 @@ static int ams641rw_off(struct samsung_s6e3fc2x01 *ctx)
 	return dsi_ctx.accum_err;
 }
 
+static void ams670ta01_reset(struct samsung_s6e3fc2x01 *ctx)
+{
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	usleep_range(10000, 11000);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	usleep_range(10000, 11000);
+}
+
+static int ams670ta01_on(struct samsung_s6e3fc2x01 *ctx)
+{
+	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
+
+	mipi_dsi_dcs_exit_sleep_mode_multi(&dsi_ctx);
+	mipi_dsi_msleep(&dsi_ctx, 120);
+
+	s6e3fc2x01_test_key_on_lvl2(&dsi_ctx);
+	mipi_dsi_dcs_set_tear_on_multi(&dsi_ctx, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
+	s6e3fc2x01_test_key_off_lvl2(&dsi_ctx);
+
+	mipi_dsi_dcs_set_column_address_multi(&dsi_ctx, 0, 1080 - 1);
+	mipi_dsi_dcs_set_page_address_multi(&dsi_ctx, 0, 2400 - 1);
+
+	s6e3fc2x01_test_key_on_lvl2(&dsi_ctx);
+	s6e3fc2x01_test_key_on_lvl3(&dsi_ctx);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xed, 0x00, 0x4c);
+	s6e3fc2x01_test_key_off_lvl2(&dsi_ctx);
+	s6e3fc2x01_test_key_off_lvl3(&dsi_ctx);
+
+	s6e3fc2x01_test_key_on_lvl2(&dsi_ctx);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xeb, 0x1b, 0x41, 0xb0, 0x0e,
+				     0x00, 0x1e, 0x5a, 0x1e, 0x1e);
+	s6e3fc2x01_test_key_off_lvl2(&dsi_ctx);
+
+	s6e3fc2x01_test_key_on_lvl2(&dsi_ctx);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x20);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb7, 0x00, 0x01, 0x53, 0x28,
+				     0x4d, 0x00, 0x90, 0x04);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
+				     0x03, 0xff);
+	s6e3fc2x01_test_key_off_lvl2(&dsi_ctx);
+
+	return dsi_ctx.accum_err;
+}
+
+static int ams670ta01_enable(struct samsung_s6e3fc2x01 *ctx)
+{
+	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
+
+	mipi_dsi_dcs_set_display_on_multi(&dsi_ctx);
+
+	return dsi_ctx.accum_err;
+}
+
+static int ams670ta01_off(struct samsung_s6e3fc2x01 *ctx)
+{
+	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
+
+	mipi_dsi_dcs_set_display_off_multi(&dsi_ctx);
+	mipi_dsi_msleep(&dsi_ctx, 20);
+	mipi_dsi_dcs_enter_sleep_mode_multi(&dsi_ctx);
+	s6e3fc2x01_test_key_on_lvl2(&dsi_ctx);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb0, 0x05);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf4, 0x01);
+	s6e3fc2x01_test_key_off_lvl2(&dsi_ctx);
+	mipi_dsi_msleep(&dsi_ctx, 120);
+
+	return dsi_ctx.accum_err;
+}
+
+static int s6e3fc2x01_power_on(struct samsung_s6e3fc2x01 *ctx)
+{
+	const unsigned int *delays = ctx->desc->supply_enable_delays_ms;
+	unsigned int i;
+	int ret;
+
+	if (!delays) {
+		ret = regulator_bulk_enable(ctx->desc->num_supplies, ctx->supplies);
+		if (ret)
+			return ret;
+	} else {
+		for (i = 0; i < ctx->desc->num_supplies; i++) {
+			ret = regulator_enable(ctx->supplies[i].consumer);
+			if (ret)
+				goto err_disable_supplies;
+
+			if (delays[i])
+				msleep(delays[i]);
+		}
+	}
+
+	if (ctx->enable_gpio) {
+		ret = gpiod_set_value_cansleep(ctx->enable_gpio, 1);
+		if (ret) {
+			regulator_bulk_disable(ctx->desc->num_supplies, ctx->supplies);
+			return ret;
+		}
+	}
+
+	return 0;
+
+err_disable_supplies:
+	while (i--)
+		regulator_disable(ctx->supplies[i].consumer);
+
+	return ret;
+}
+
+static void s6e3fc2x01_power_off(struct samsung_s6e3fc2x01 *ctx)
+{
+	if (ctx->enable_gpio)
+		gpiod_set_value_cansleep(ctx->enable_gpio, 0);
+	regulator_bulk_disable(ctx->desc->num_supplies, ctx->supplies);
+}
+
 static int s6e3fc2x01_disable(struct drm_panel *panel)
 {
 	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
@@ -230,7 +357,7 @@ static int s6e3fc2x01_prepare(struct drm_panel *panel)
 	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
 	int ret;
 
-	ret = regulator_bulk_enable(ctx->desc->num_supplies, ctx->supplies);
+	ret = s6e3fc2x01_power_on(ctx);
 	if (ret < 0)
 		return ret;
 
@@ -239,7 +366,7 @@ static int s6e3fc2x01_prepare(struct drm_panel *panel)
 	ret = ctx->desc->on(ctx);
 	if (ret < 0) {
 		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-		regulator_bulk_disable(ctx->desc->num_supplies, ctx->supplies);
+		s6e3fc2x01_power_off(ctx);
 		return ret;
 	}
 
@@ -251,7 +378,7 @@ static int s6e3fc2x01_unprepare(struct drm_panel *panel)
 	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-	regulator_bulk_disable(ctx->desc->num_supplies, ctx->supplies);
+	s6e3fc2x01_power_off(ctx);
 
 	return 0;
 }
@@ -280,6 +407,34 @@ static const struct samsung_s6e3fc2x01_desc ams641rw_desc = {
 	.on = ams641rw_on,
 	.enable = ams641rw_enable,
 	.off = ams641rw_off,
+};
+
+static const struct drm_display_mode ams670ta01_mode = {
+	.clock = (1080 + 120 + 121 + 122) * (2400 + 16 + 2 + 2) * 60 / 1000,
+	.hdisplay = 1080,
+	.hsync_start = 1080 + 120,
+	.hsync_end = 1080 + 120 + 121,
+	.htotal = 1080 + 120 + 121 + 122,
+	.vdisplay = 2400,
+	.vsync_start = 2400 + 16,
+	.vsync_end = 2400 + 16 + 2,
+	.vtotal = 2400 + 16 + 2 + 2,
+	.width_mm = 70,
+	.height_mm = 155,
+};
+
+static const struct samsung_s6e3fc2x01_desc ams670ta01_desc = {
+	.mode = &ams670ta01_mode,
+	.supplies = ams670ta01_supplies,
+	.supply_enable_delays_ms = ams670ta01_supply_enable_delays_ms,
+	.num_supplies = ARRAY_SIZE(ams670ta01_supplies),
+	.mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS,
+	.hs_rate = 1200000000,
+	.has_enable_gpio = true,
+	.reset = ams670ta01_reset,
+	.on = ams670ta01_on,
+	.enable = ams670ta01_enable,
+	.off = ams670ta01_off,
 };
 
 static int s6e3fc2x01_get_modes(struct drm_panel *panel,
@@ -361,12 +516,20 @@ static int s6e3fc2x01_probe(struct mipi_dsi_device *dsi)
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
 
+	if (ctx->desc->has_enable_gpio) {
+		ctx->enable_gpio = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
+		if (IS_ERR(ctx->enable_gpio))
+			return dev_err_probe(dev, PTR_ERR(ctx->enable_gpio),
+					     "Failed to get enable-gpios\n");
+	}
+
 	ctx->dsi = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
 	dsi->mode_flags = ctx->desc->mode_flags;
+	dsi->hs_rate = ctx->desc->hs_rate;
 
 	ctx->panel.prepare_prev_first = true;
 
@@ -401,6 +564,7 @@ static void s6e3fc2x01_remove(struct mipi_dsi_device *dsi)
 
 static const struct of_device_id s6e3fc2x01_of_match[] = {
 	{ .compatible = "samsung,s6e3fc2x01-ams641rw", .data = &ams641rw_desc },
+	{ .compatible = "samsung,s6e3fc2x01-ams670ta01", .data = &ams670ta01_desc },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, s6e3fc2x01_of_match);
