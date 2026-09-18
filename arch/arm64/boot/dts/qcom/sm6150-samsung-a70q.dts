@@ -206,6 +206,30 @@
 	reg = <0x0 0xef000000 0x0 0x800000>;
 };
 
+/* Match the OPPs programmed by the A70 firmware's cpufreq hardware LUT. */
+&cpu0_opp_table {
+	/delete-node/ opp-998400000;
+
+	opp-1017600000 {
+		opp-hz = /bits/ 64 <1017600000>;
+		opp-peak-kBps = <(451000 * 4) (806400 * 16)>;
+	};
+
+	opp-1708800000 {
+		opp-hz = /bits/ 64 <1708800000>;
+		opp-peak-kBps = <(1017000 * 4) (1363200 * 16)>;
+	};
+};
+
+&cpu6_opp_table {
+	/delete-node/ opp-1094400000;
+
+	opp-2016000000 {
+		opp-hz = /bits/ 64 <2016000000>;
+		opp-peak-kBps = <(1555000 * 4) (1363200 * 16)>;
+	};
+};
+
 /*
  * The Samsung firmware requires platform-specific preparation before CPU
  * power collapse.  Keep the architectural WFI idle state until that support
