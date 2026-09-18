@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/power/supply/qcom,pm6150-charger.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Qualcomm PM6150 SMB5 charger
+
+maintainers:
+  - Sebastian Reichel <sre@kernel.org>
+
+description: |
+  The PM6150 SMB5 block contains the battery buck charger, USB input source
+  detection, AICL, battery interface and charger safety logic. Type-C and
+  source VBUS are separate PM6150 devices and are not owned by this binding.
+
+allOf:
+  - $ref: power-supply.yaml#
+  - $ref: /schemas/thermal/thermal-cooling-devices.yaml#
+
+properties:
+  compatible:
+    const: qcom,pm6150-charger
+
+  reg:
+    maxItems: 1
+
+  interrupts:
+    minItems: 16
+    maxItems: 16
+
+  interrupt-names:
+    items:
+      - const: chg-state-change
+      - const: bat-temp
+      - const: bat-ov
+      - const: bat-therm-or-id-missing
+      - const: bat-terminal-missing
+      - const: usbin-collapse
+      - const: usbin-vashdn
+      - const: usbin-uv
+      - const: usbin-ov
+      - const: usbin-plugin
+      - const: usbin-src-change
+      - const: usbin-icl-change
+      - const: wdog-bark
+      - const: aicl-done
+      - const: temp-change
+      - const: temp-change-smb
+
+  io-channels:
+    minItems: 3
+    maxItems: 3
+
+  io-channel-names:
+    items:
+      - const: usbin-v
+      - const: batt-therm
+      - const: batt-id
+
+  input-current-limit-microamp:
+    minimum: 100000
+    maximum: 5000000
+    description: Board-safe upper limit for USB input current.
+
+  qcom,hard-jeita-hysteresis-celsius:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 1
+    maximum: 20
+    description:
+      Temperature inside the battery hard operating range required before
+      software re-enables charging after a hard hot or cold condition.
+
+  '#cooling-cells':
+    const: 2
+    description:
+      Cooling state 0 is normal charging, state 1 limits fast-charge current
+      to 500 mA, and state 2 disables charging.
+
+  monitored-battery: true
+
+  power-supplies: true
+
+required:
+  - compatible
+  - reg
+  - interrupts
+  - interrupt-names
+  - io-channels
+  - io-channel-names
+  - input-current-limit-microamp
+  - qcom,hard-jeita-hysteresis-celsius
+  - monitored-battery
+  - power-supplies
+
+unevaluatedProperties: false
+...
