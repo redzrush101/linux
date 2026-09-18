@@ -37,6 +37,9 @@ properties:
   vcca-supply:
     description: Phandle to vcca regulator device node.
 
+  vdda-supply:
+    description: Phandle to vdda regulator device node.
+
   power-domains:
     description:
       A phandle and PM domain specifier for an optional power domain.
