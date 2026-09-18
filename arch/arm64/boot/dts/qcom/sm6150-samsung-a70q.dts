@@ -39,6 +39,47 @@
 		};
 	};
 
+	battery: battery {
+		compatible = "simple-battery";
+		device-chemistry = "lithium-ion";
+		charge-full-design-microamp-hours = <4400000>;
+		voltage-min-design-microvolt = <3400000>;
+		voltage-max-design-microvolt = <4350000>;
+		constant-charge-current-max-microamp = <1500000>;
+		constant-charge-voltage-max-microvolt = <4350000>;
+		charge-term-current-microamp = <250000>;
+		re-charge-voltage-microvolt = <4280000>;
+		operating-range-celsius = <0 50>;
+		alert-celsius = <16 40>;
+		alert-low-temp-charge-current-microamp = <400000>;
+		alert-low-temp-charge-voltage-microvolt = <4350000>;
+		alert-high-temp-charge-current-microamp = <1500000>;
+		alert-high-temp-charge-voltage-microvolt = <4150000>;
+		bti-resistance-ohms = <107000>;
+		bti-resistance-tolerance-percent = <15>;
+
+		ocv-capacity-celsius = <25>;
+		ocv-capacity-table-0 = <4286500 100>, <4259000 98>,
+			<4233300 96>, <4209800 94>, <4188400 92>,
+			<4167700 90>, <4146400 88>, <4125300 86>,
+			<4106700 84>, <4092200 82>, <4077000 80>,
+			<4054400 78>, <4024000 76>, <3999800 74>,
+			<3984800 72>, <3972600 70>, <3961000 68>,
+			<3950400 66>, <3938400 64>, <3921000 62>,
+			<3899800 60>, <3880900 58>, <3864000 56>,
+			<3849400 54>, <3838300 52>, <3829100 50>,
+			<3820800 48>, <3813200 46>, <3806100 44>,
+			<3799600 42>, <3793500 40>, <3788000 38>,
+			<3783100 36>, <3778600 34>, <3774100 32>,
+			<3769900 30>, <3765200 28>, <3759300 26>,
+			<3752300 24>, <3744800 22>, <3736800 20>,
+			<3727600 18>, <3715600 16>, <3701400 14>,
+			<3692300 12>, <3687300 10>, <3685600 9>,
+			<3683800 8>, <3680800 7>, <3674200 6>,
+			<3652900 5>, <3608300 4>, <3549000 3>,
+			<3468800 2>, <3344200 1>, <2827900 0>;
+	};
+
 	clocks {
 		sleep_clk: sleep-clk {
 			compatible = "fixed-clock";
@@ -517,6 +558,41 @@
 &ufs_mem_phy {
 	vdda-phy-supply = <&vreg_l4a_0p88>;
 	vdda-pll-supply = <&vreg_l11a_1p8>;
+	status = "okay";
+};
+
+&pm6150_charger {
+	#cooling-cells = <2>;
+	io-channels = <&pm6150_adc ADC5_USB_IN_V_16>,
+		      <&pm6150_adc ADC5_BAT_THERM_100K_PU>,
+		      <&pm6150_adc ADC5_BAT_ID_100K_PU>;
+	io-channel-names = "usbin-v", "batt-therm", "batt-id";
+	input-current-limit-microamp = <1500000>;
+	qcom,hard-jeita-hysteresis-celsius = <2>;
+	monitored-battery = <&battery>;
+	power-supplies = <&pm6150_typec>;
+	status = "okay";
+};
+
+&pm6150_thermal {
+	cooling-maps {
+		map0 {
+			cooling-device = <&pm6150_charger 1 1>;
+			trip = <&pm6150_trip0>;
+		};
+
+		map1 {
+			cooling-device = <&pm6150_charger 2 2>;
+			trip = <&pm6150_crit>;
+		};
+	};
+};
+
+&pm6150_qg {
+	io-channels = <&pm6150_adc ADC5_BAT_THERM_100K_PU>;
+	io-channel-names = "batt-therm";
+	monitored-battery = <&battery>;
+	power-supplies = <&pm6150_charger>;
 	status = "okay";
 };
 
