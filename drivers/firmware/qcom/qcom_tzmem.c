@@ -84,6 +84,7 @@ static const char *const qcom_tzmem_blacklist[] = {
 	"qcom,sdm845", /* reset in rmtfs memory assignment */
 	"qcom,sm7150", /* reset in rmtfs memory assignment */
 	"qcom,sm8150", /* reset in rmtfs memory assignment */
+	"samsung,a70q", /* failure in ADSP firmware loading */
 	NULL
 };
 
