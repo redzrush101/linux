@@ -84,6 +84,17 @@
 		pinctrl-names = "default";
 	};
 
+	tsp_vdd: regulator-tsp-vdd {
+		compatible = "regulator-fixed";
+		regulator-name = "tsp-vdd";
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3000000>;
+		gpio = <&tlmm 93 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-0 = <&tsp_en_default>;
+		pinctrl-names = "default";
+	};
+
 	reserved-memory {
 		kaslr_mem: kaslr@80001000 {
 			reg = <0x0 0x80001000 0x0 0x1000>;
@@ -424,6 +435,10 @@
 	status = "disabled";
 };
 
+&dispcc {
+	status = "okay";
+};
+
 &gpi_dma0 {
 	status = "okay";
 };
@@ -473,6 +488,75 @@
 
 &gpu_zap_shader {
 	firmware-name = "qcom/sm6150/a70q/a612_zap.mdt";
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	touchscreen@50 {
+		compatible = "imagis,ist4050";
+		reg = <0x50>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <89 IRQ_TYPE_EDGE_FALLING>;
+		vdd-supply = <&tsp_vdd>;
+		vddio-supply = <&tsp_vdd>;
+		pinctrl-0 = <&tsp_int_default>;
+		pinctrl-names = "default";
+		touchscreen-size-x = <1080>;
+		touchscreen-size-y = <2400>;
+	};
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l3c_1p2>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "samsung,s6e3fc2x01-ams670ta01",
+			     "samsung,s6e3fc2x01";
+		reg = <0>;
+		enable-gpios = <&pm6150_gpios 6 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 91 GPIO_ACTIVE_LOW>;
+		te-gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
+		vddio-supply = <&vreg_l13a_1p8>;
+		vci-supply = <&vreg_l18a_3p0>;
+		pinctrl-0 = <&panel_enable_default>, <&panel_reset_default>,
+			    <&panel_te_default>;
+		pinctrl-names = "default";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	vdda-supply = <&vreg_l4a_0p88>;
+
+	status = "okay";
+};
+
+&pm6150_gpios {
+	panel_enable_default: panel-enable-default-state {
+		pins = "gpio6";
+		function = "normal";
+		power-source = <0>;
+		bias-disable;
+	};
 };
 
 &pm6150_resin {
