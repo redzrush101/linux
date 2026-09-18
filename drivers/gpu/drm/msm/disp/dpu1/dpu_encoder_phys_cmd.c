@@ -95,6 +95,15 @@ static void dpu_encoder_phys_cmd_pp_tx_done_irq(void *arg)
 		return;
 
 	DPU_ATRACE_BEGIN("pp_done_irq");
+
+	/*
+	 * CTL_START can occasionally be missed.  Since a pingpong completion
+	 * proves that the corresponding kickoff was accepted, retire one stale
+	 * CTL_START count here as well.
+	 */
+	if (dpu_encoder_phys_cmd_is_master(phys_enc))
+		atomic_add_unless(&phys_enc->pending_ctlstart_cnt, -1, 0);
+
 	/* notify all synchronous clients first, then asynchronous clients */
 	dpu_encoder_frame_done_callback(phys_enc->parent, phys_enc, event);
 
@@ -657,8 +666,19 @@ static int _dpu_encoder_phys_cmd_wait_for_ctl_start(
 			dpu_encoder_phys_cmd_ctl_start_irq,
 			&wait_info);
 	if (ret == -ETIMEDOUT) {
-		DPU_ERROR_CMDENC(cmd_enc, "ctl start interrupt wait failed\n");
-		ret = -EINVAL;
+		/*
+		 * CTL_START is cleared by hardware once the kickoff is accepted.
+		 * Recover a missed interrupt without leaving the pending counter
+		 * permanently offset for every following commit.
+		 */
+		atomic_add_unless(&phys_enc->pending_ctlstart_cnt, -1, 0);
+		if (!phys_enc->hw_ctl->ops.is_started(phys_enc->hw_ctl)) {
+			ret = 0;
+		} else {
+			DPU_ERROR_CMDENC(cmd_enc,
+					 "ctl start interrupt wait failed\n");
+			ret = -EINVAL;
+		}
 	} else if (!ret)
 		ret = 0;
 
