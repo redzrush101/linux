@@ -230,6 +230,45 @@
 	};
 };
 
+/* Match the speed bin and bus levels selected by the Samsung firmware. */
+&gpu_opp_table {
+	/delete-node/ opp-845000000;
+	/delete-node/ opp-745000000;
+	/delete-node/ opp-650000000;
+	/delete-node/ opp-500000000;
+	/delete-node/ opp-435000000;
+
+	opp-290000000 {
+		opp-hz = /bits/ 64 <290000000>;
+		required-opps = <&rpmhpd_opp_low_svs>;
+		opp-peak-kBps = <1804000>;
+	};
+
+	opp-435000000 {
+		opp-hz = /bits/ 64 <435000000>;
+		required-opps = <&rpmhpd_opp_svs>;
+		opp-peak-kBps = <3000000>;
+	};
+
+	opp-550000000 {
+		opp-hz = /bits/ 64 <550000000>;
+		required-opps = <&rpmhpd_opp_svs_l1>;
+		opp-peak-kBps = <3975000>;
+	};
+
+	opp-700000000 {
+		opp-hz = /bits/ 64 <700000000>;
+		required-opps = <&rpmhpd_opp_nom>;
+		opp-peak-kBps = <5287500>;
+	};
+
+	opp-745000000 {
+		opp-hz = /bits/ 64 <745000000>;
+		required-opps = <&rpmhpd_opp_nom_l1>;
+		opp-peak-kBps = <7050000>;
+	};
+};
+
 /*
  * The Samsung firmware requires platform-specific preparation before CPU
  * power collapse.  Keep the architectural WFI idle state until that support
@@ -338,6 +377,14 @@
 
 &gpi_dma0 {
 	status = "okay";
+};
+
+&gpu {
+	status = "okay";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/sm6150/a70q/a612_zap.mdt";
 };
 
 &i2c1 {
