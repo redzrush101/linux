@@ -899,8 +899,7 @@
 		};
 
 		mmc0: mmc@11230000 {
-			compatible = "mediatek,mt6765-mmc",
-				     "mediatek,mt8183-mmc";
+			compatible = "mediatek,mt6765-mmc";
 			reg = <0 0x11230000 0 0x1000>;
 
 			interrupts = <GIC_SPI 79 IRQ_TYPE_LEVEL_LOW>;
@@ -914,8 +913,7 @@
 		};
 
 		mmc1: mmc@11240000 {
-			compatible = "mediatek,mt6765-mmc",
-				     "mediatek,mt8183-mmc";
+			compatible = "mediatek,mt6765-mmc";
 			reg = <0 0x11240000 0 0x1000>;
 
 			interrupts = <GIC_SPI 80 IRQ_TYPE_LEVEL_LOW>;
