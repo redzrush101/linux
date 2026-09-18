@@ -449,6 +449,10 @@
 	status = "okay";
 };
 
+&pm6150_rtc {
+	status = "okay";
+};
+
 &pm6150_gpios {
 	panel_enable_default: panel-enable-default-state {
 		pins = "gpio6";
