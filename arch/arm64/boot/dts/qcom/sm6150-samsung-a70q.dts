@@ -26,6 +26,31 @@
 	qcom,msm-id = <355 0>;
 	qcom,board-id = <0x22 0x0e>;
 
+	wcd9370: audio-codec {
+		compatible = "qcom,wcd9370-codec";
+		reset-gpios = <&lpass_tlmm 24 GPIO_ACTIVE_LOW>;
+		vdd-buck-supply = <&vreg_l15a_1p8>;
+		vdd-rxtx-supply = <&vreg_l10a_1p8>;
+		vdd-px-supply = <&vreg_l10a_1p8>;
+		vdd-mic-bias-supply = <&vreg_bob>;
+		#sound-dai-cells = <1>;
+		qcom,micbias1-microvolt = <1800000>;
+		qcom,micbias2-microvolt = <2800000>;
+		qcom,micbias3-microvolt = <1800000>;
+		qcom,micbias4-microvolt = <1800000>;
+		qcom,ground-jack-type-normally-closed;
+		/*
+		 * Samsung never reports line-out: anything above 640 mV on
+		 * MIC BIAS2 (2.8 V) is a headset microphone.
+		 */
+		qcom,mbhc-headphone-vthreshold-microvolt = <640000>;
+		qcom,mbhc-headset-vthreshold-microvolt = <2850000>;
+		qcom,mbhc-buttons-vthreshold-microvolt = <13000 88000 125000 225000
+							  500000 500000 500000 500000>;
+		qcom,rx-device = <&wcd937x_rx>;
+		qcom,tx-device = <&wcd937x_tx>;
+	};
+
 	battery: battery {
 		compatible = "simple-battery";
 		device-chemistry = "lithium-ion";
@@ -277,6 +302,99 @@
 			compatible = "shared-dma-pool";
 			reg = <0x0 0xef000000 0x0 0x800000>;
 			no-map;
+		};
+	};
+
+	sound {
+		compatible = "samsung,a70q-sndcard";
+		model = "Samsung A70q";
+		audio-routing = "Headphone Jack", "HPHL",
+				"Headphone Jack", "HPHR",
+				"Earpiece", "EAR",
+				"SpkrLeft IN", "WSA_SPK1 OUT",
+				"IN1_HPHL", "HPHL_OUT",
+				"IN2_HPHR", "HPHR_OUT",
+				"IN3_AUX", "AUX_OUT",
+				"AMIC1", "Main Mic",
+				"Main Mic", "MIC BIAS1",
+				"AMIC2", "Mic Jack",
+				"Mic Jack", "MIC BIAS2",
+				"AMIC3", "Secondary Mic",
+				"Secondary Mic", "MIC BIAS3",
+				"TX SWR_ADC0", "ADC1_OUTPUT",
+				"TX SWR_ADC2", "ADC2_OUTPUT";
+
+		mm1-dai-link {
+			link-name = "MultiMedia1";
+
+			cpu {
+				sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA1>;
+			};
+		};
+
+		mm2-dai-link {
+			link-name = "MultiMedia2";
+
+			cpu {
+				sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA2>;
+			};
+		};
+
+		mm3-dai-link {
+			link-name = "MultiMedia3";
+
+			cpu {
+				sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA3>;
+			};
+		};
+
+		wcd-capture-dai-link {
+			link-name = "WCD Capture";
+
+			codec {
+				sound-dai = <&wcd9370 1>, <&swr_tx 0>, <&lpass_tx_macro 0>;
+			};
+
+			cpu {
+				sound-dai = <&q6afedai TX_CODEC_DMA_TX_3>;
+			};
+
+			platform {
+				sound-dai = <&q6routing>;
+			};
+		};
+
+		wcd-playback-dai-link {
+			link-name = "WCD Playback";
+
+			codec {
+				sound-dai = <&wcd9370 0>, <&swr_rx 0>, <&lpass_rx_macro 0>;
+			};
+
+			cpu {
+				sound-dai = <&q6afedai RX_CODEC_DMA_RX_0>;
+			};
+
+			platform {
+				sound-dai = <&q6routing>;
+			};
+		};
+
+		wsa-playback-dai-link {
+			link-name = "WSA Playback";
+
+			codec {
+				sound-dai = <&speaker_amp>, <&swr_wsa 0>,
+					    <&lpass_wsa_macro 0>;
+			};
+
+			cpu {
+				sound-dai = <&q6afedai WSA_CODEC_DMA_RX_0>;
+			};
+
+			platform {
+				sound-dai = <&q6routing>;
+			};
 		};
 	};
 
@@ -639,6 +757,78 @@
 	};
 };
 
+&lpass_rx_macro {
+	pinctrl-0 = <&rx_swr_default>;
+	pinctrl-names = "default";
+
+	status = "okay";
+};
+
+&lpass_tlmm {
+	/* Stock firmware assigns the other LPI GPIOs to ADSP or board functions. */
+	gpio-reserved-ranges = <0 8>, <12 6>, <25 5>;
+
+	rx_swr_default: rx-swr-default-state {
+		rx-swr-clk-pins {
+			pins = "gpio21";
+			function = "swr_rx_clk";
+			drive-strength = <8>;
+			bias-bus-hold;
+		};
+
+		rx-swr-data-pins {
+			pins = "gpio22", "gpio23";
+			function = "swr_rx_data";
+			drive-strength = <8>;
+			bias-bus-hold;
+		};
+	};
+
+	tx_swr_default: tx-swr-default-state {
+		tx-swr-clk-pins {
+			pins = "gpio18";
+			function = "swr_tx_clk";
+			drive-strength = <8>;
+			bias-bus-hold;
+		};
+
+		tx-swr-data1-pins {
+			pins = "gpio19";
+			function = "swr_tx_data";
+			drive-strength = <8>;
+			bias-bus-hold;
+		};
+
+		tx-swr-data2-pins {
+			pins = "gpio20";
+			function = "swr_tx_data";
+			drive-strength = <8>;
+			bias-bus-hold;
+		};
+	};
+};
+
+&lpass_tx_macro {
+	pinctrl-0 = <&tx_swr_default>;
+	pinctrl-names = "default";
+
+	status = "okay";
+};
+
+&lpass_va_macro {
+	/* The board has no DMICs; the macro only provides the fsgen clock. */
+	qcom,dmic-sample-rate = <2400000>;
+
+	status = "okay";
+};
+
+&lpass_wsa_macro {
+	pinctrl-0 = <&wsa_clk_default>, <&wsa_data_default>;
+	pinctrl-names = "default";
+
+	status = "okay";
+};
+
 &mdss {
 	status = "okay";
 };
@@ -769,6 +959,12 @@
 	status = "okay";
 };
 
+&remoteproc_adsp {
+	firmware-name = "qcom/sm6150/a70q/adsp.mdt";
+
+	status = "okay";
+};
+
 &sdhc_2 {
 	pinctrl-0 = <&sdc2_state_on>, <&sd_cd_default>;
 	pinctrl-1 = <&sdc2_state_off>, <&sd_cd_default>;
@@ -779,6 +975,43 @@
 	vqmmc-supply = <&vreg_l6c_2p96>;
 
 	status = "okay";
+};
+
+&swr_rx {
+	status = "okay";
+
+	wcd937x_rx: codec@0,4 {
+		compatible = "sdw20217010a00";
+		reg = <0 4>;
+		qcom,rx-port-mapping = <1 2 3 4 5>;
+		qcom,rx-channel-mapping = /bits/ 8 <1 2 1 1 2 1 1 2>;
+	};
+};
+
+&swr_tx {
+	status = "okay";
+
+	wcd937x_tx: codec@0,3 {
+		compatible = "sdw20217010a00";
+		reg = <0 3>;
+		qcom,tx-port-mapping = <2 3 4 5>;
+		qcom,tx-channel-mapping = /bits/ 8 <1 2 1 1 2 3 3 4 1 2 3 4>;
+	};
+};
+
+&swr_wsa {
+	status = "okay";
+
+	speaker_amp: speaker@0,3 {
+		compatible = "sdw10217211000";
+		reg = <0 3>;
+		powerdown-gpios = <&tlmm 108 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&wsa_spkr_en_default>;
+		pinctrl-names = "default";
+		#sound-dai-cells = <0>;
+		#thermal-sensor-cells = <0>;
+		sound-name-prefix = "SpkrLeft";
+	};
 };
 
 &tlmm {
