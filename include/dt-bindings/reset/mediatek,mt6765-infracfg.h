@@ -1,0 +1,8 @@
+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
+
+#ifndef _DT_BINDINGS_RESET_MT6765_INFRACFG_H
+#define _DT_BINDINGS_RESET_MT6765_INFRACFG_H
+
+#define MT6765_INFRA_RST2_PMIC_WRAP	0
+
+#endif

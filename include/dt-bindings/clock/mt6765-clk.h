@@ -225,7 +225,8 @@
 #define CLK_IFR_CCIF2_MD		61
 #define CLK_IFR_CCIF3_AP		62
 #define CLK_IFR_CCIF3_MD		63
-#define CLK_IFR_NR_CLK			64
+#define CLK_IFR_PMIC_AP			64
+#define CLK_IFR_NR_CLK			65
 
 /* AUDIO */
 #define CLK_AUDIO_AFE			0
