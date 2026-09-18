@@ -3,6 +3,7 @@
 /dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include "talos.dtsi"
 #include "pm6150.dtsi"
@@ -50,6 +51,17 @@
 			clock-frequency = <38400000>;
 			#clock-cells = <0>;
 		};
+	};
+
+	tsp_vdd: regulator-tsp-vdd {
+		compatible = "regulator-fixed";
+		regulator-name = "tsp-vdd";
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3000000>;
+		gpio = <&tlmm 93 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-0 = <&tsp_en_default>;
+		pinctrl-names = "default";
 	};
 
 	reserved-memory {
@@ -286,14 +298,55 @@
 	status = "disabled";
 };
 
+&gpi_dma0 {
+	status = "okay";
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	touchscreen@50 {
+		compatible = "imagis,ist4050";
+		reg = <0x50>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <89 IRQ_TYPE_EDGE_FALLING>;
+		vdd-supply = <&tsp_vdd>;
+		vddio-supply = <&tsp_vdd>;
+		pinctrl-0 = <&tsp_int_default>;
+		pinctrl-names = "default";
+		touchscreen-size-x = <1080>;
+		touchscreen-size-y = <2400>;
+	};
+};
+
 &pm6150_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
+	status = "okay";
+};
+
+&qupv3_id_0 {
 	status = "okay";
 };
 
 &tlmm {
 	/* These pins are assigned to secure-world peripherals by the firmware. */
 	gpio-reserved-ranges = <0 4>, <6 4>, <37 2>;
+
+	tsp_en_default: tsp-en-state {
+		pins = "gpio93";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	tsp_int_default: tsp-int-state {
+		pins = "gpio89";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		input-enable;
+	};
 };
 
 &ufs_mem_hc {
