@@ -269,6 +269,11 @@
 	};
 };
 
+/* The A70 firmware does not expose the 460 MHz video clock level. */
+&venus_opp_table {
+	/delete-node/ opp-460000000;
+};
+
 /*
  * The Samsung firmware requires platform-specific preparation before CPU
  * power collapse.  Keep the architectural WFI idle state until that support
@@ -534,5 +539,10 @@
 	vdd-supply = <&vreg_l4a_0p88>;
 	vdda-phy-dpdm-supply = <&vreg_l17a_3p0>;
 	vdda-pll-supply = <&vreg_l11a_1p8>;
+	status = "okay";
+};
+
+&venus {
+	firmware-name = "qcom/sm6150/a70q/venus.mdt";
 	status = "okay";
 };
