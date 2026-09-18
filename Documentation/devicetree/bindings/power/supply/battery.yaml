@@ -90,6 +90,37 @@ properties:
   constant-charge-voltage-max-microvolt:
     description: maximum constant input voltage
 
+  alert-low-temp-charge-current-microamp:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: maximum charging current while the battery temperature is
+      between the minimum operating temperature and the low alert temperature
+
+  alert-low-temp-charge-voltage-microvolt:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: maximum charging voltage while the battery temperature is
+      between the minimum operating temperature and the low alert temperature
+
+  alert-high-temp-charge-current-microamp:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: maximum charging current while the battery temperature is
+      between the high alert temperature and the maximum operating temperature
+
+  alert-high-temp-charge-voltage-microvolt:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    description: maximum charging voltage while the battery temperature is
+      between the high alert temperature and the maximum operating temperature
+
+  bti-resistance-ohms:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    minimum: 1
+    description: nominal Battery Type Indicator resistance in ohms
+
+  bti-resistance-tolerance-percent:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    maximum: 100
+    description: allowed deviation from the nominal Battery Type Indicator
+      resistance, in percent
+
   factory-internal-resistance-micro-ohms:
     description: battery factory internal resistance
 

@@ -850,11 +850,23 @@ int power_supply_get_battery_info(struct power_supply *psy,
 	fwnode_property_read_u32(fwnode, "over-voltage-threshold-microvolt",
 			     &info->overvoltage_limit_uv);
 	fwnode_property_read_u32(fwnode, "constant-charge-current-max-microamp",
-			     &info->constant_charge_current_max_ua);
+				     &info->constant_charge_current_max_ua);
 	fwnode_property_read_u32(fwnode, "constant-charge-voltage-max-microvolt",
-			     &info->constant_charge_voltage_max_uv);
+				     &info->constant_charge_voltage_max_uv);
+	fwnode_property_read_u32(fwnode, "alert-low-temp-charge-current-microamp",
+				     &info->alert_low_temp_charge_current_ua);
+	fwnode_property_read_u32(fwnode, "alert-low-temp-charge-voltage-microvolt",
+				     &info->alert_low_temp_charge_voltage_uv);
+	fwnode_property_read_u32(fwnode, "alert-high-temp-charge-current-microamp",
+				     &info->alert_high_temp_charge_current_ua);
+	fwnode_property_read_u32(fwnode, "alert-high-temp-charge-voltage-microvolt",
+				     &info->alert_high_temp_charge_voltage_uv);
+	fwnode_property_read_u32(fwnode, "bti-resistance-ohms",
+				     &info->bti_resistance_ohm);
+	fwnode_property_read_u32(fwnode, "bti-resistance-tolerance-percent",
+				     &info->bti_resistance_tolerance);
 	fwnode_property_read_u32(fwnode, "factory-internal-resistance-micro-ohms",
-			     &info->factory_internal_resistance_uohm);
+				     &info->factory_internal_resistance_uohm);
 
 	if (!fwnode_property_read_u32_array(fwnode, "ambient-celsius",
 					    min_max, ARRAY_SIZE(min_max))) {
