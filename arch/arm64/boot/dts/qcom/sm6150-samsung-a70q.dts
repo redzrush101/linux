@@ -520,13 +520,55 @@
 	status = "okay";
 };
 
+&pm6150_typec {
+	vdd-pdphy-supply = <&vreg_l17a_3p0>;
+	status = "okay";
+
+	connector {
+		compatible = "usb-c-connector";
+		power-role = "dual";
+		data-role = "dual";
+		try-power-role = "sink";
+		typec-power-opmode = "1.5A";
+		self-powered;
+		pd-disable;
+		vbus-supply = <&pm6150_vbus>;
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				pm6150_hs_out: endpoint {
+					remote-endpoint = <&usb_1_hs_in>;
+				};
+			};
+		};
+	};
+};
+
+&pm6150_vbus {
+	regulator-min-microamp = <500000>;
+	regulator-max-microamp = <1500000>;
+	status = "okay";
+};
+
 &usb_1 {
-	dr_mode = "peripheral";
+	dr_mode = "otg";
 	maximum-speed = "high-speed";
 	phys = <&usb_1_hsphy>;
 	phy-names = "usb2-phy";
 	qcom,select-utmi-as-pipe-clk;
+	usb-role-switch;
 	status = "okay";
+
+	port {
+		usb_1_hs_in: endpoint {
+			remote-endpoint = <&pm6150_hs_out>;
+		};
+	};
 };
 
 &usb_1_hsphy {
