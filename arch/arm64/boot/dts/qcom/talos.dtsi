@@ -5246,7 +5246,7 @@
 			clocks = <&rpmhcc RPMH_CXO_CLK>;
 			clock-names = "xo";
 
-			power-domains = <&rpmhpd RPMHPD_CX>;
+			power-domains = <&rpmhpd RPMHPD_LCX>;
 			power-domain-names = "cx";
 
 			memory-region = <&rproc_adsp_mem>;
