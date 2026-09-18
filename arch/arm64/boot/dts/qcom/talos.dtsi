@@ -473,6 +473,8 @@
 	firmware {
 		scm {
 			compatible = "qcom,scm-qcs615", "qcom,scm";
+			interconnects = <&aggre1_noc MASTER_CRYPTO QCOM_ICC_TAG_ALWAYS
+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>;
 			qcom,dload-mode = <&tcsr 0x13000>;
 			sram = <&minidump_config>;
 		};
