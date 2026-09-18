@@ -137,6 +137,7 @@
 
 		cont_splash_mem: framebuffer@9c000000 {
 			reg = <0x0 0x9c000000 0x0 0xf00000>;
+			iommu-addresses = <&mdss 0x0 0x9c000000 0x0 0xf00000>;
 			no-map;
 		};
 
@@ -264,10 +265,24 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
+		vreg_l13a_1p8: ldo13 {
+			regulator-name = "vreg_l13a_1p8";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1900000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
 		vreg_l17a_3p0: ldo17 {
 			regulator-name = "vreg_l17a_3p0";
 			regulator-min-microvolt = <3000000>;
 			regulator-max-microvolt = <3230000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l18a_3p0: ldo18 {
+			regulator-name = "vreg_l18a_3p0";
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3000000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 	};
@@ -293,9 +308,8 @@
 	};
 };
 
-/* Keep the bootloader-configured display running for simple-framebuffer. */
 &dispcc {
-	status = "disabled";
+	status = "okay";
 };
 
 &gpi_dma0 {
@@ -320,9 +334,62 @@
 	};
 };
 
+&mdss {
+	memory-region = <&cont_splash_mem>;
+
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l3c_1p2>;
+	status = "okay";
+
+	panel@0 {
+		compatible = "samsung,s6e3fc2x01-ams670ta01",
+			     "samsung,s6e3fc2x01";
+		reg = <0>;
+
+		enable-gpios = <&pm6150_gpios 6 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 91 GPIO_ACTIVE_LOW>;
+		te-gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
+
+		vddio-supply = <&vreg_l13a_1p8>;
+		vci-supply = <&vreg_l18a_3p0>;
+
+		pinctrl-0 = <&panel_enable_default>, <&panel_reset_default>,
+			    <&panel_te_default>;
+		pinctrl-names = "default";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	vdda-supply = <&vreg_l4a_0p88>;
+	status = "okay";
+};
+
 &pm6150_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
 	status = "okay";
+};
+
+&pm6150_gpios {
+	panel_enable_default: panel-enable-default-state {
+		pins = "gpio6";
+		function = "normal";
+		power-source = <0>;
+		bias-disable;
+	};
 };
 
 &qupv3_id_0 {
@@ -345,7 +412,20 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
-		input-enable;
+	};
+
+	panel_reset_default: panel-reset-default-state {
+		pins = "gpio91";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	panel_te_default: panel-te-default-state {
+		pins = "gpio90";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
 	};
 };
 
