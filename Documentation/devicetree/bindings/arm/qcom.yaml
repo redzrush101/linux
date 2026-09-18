@@ -1094,6 +1094,11 @@ properties:
 
       - items:
           - enum:
+              - samsung,a70q
+          - const: qcom,sm6150
+
+      - items:
+          - enum:
               - sony,pdx213
           - const: qcom,sm6350
 
@@ -1410,6 +1415,7 @@ allOf:
               - qcom,sm4250
               - qcom,sm6115
               - qcom,sm6125
+              - qcom,sm6150
               - qcom,sm6350
               - qcom,sm7125
               - qcom,sm7225
