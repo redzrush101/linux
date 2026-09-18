@@ -420,6 +420,12 @@
 	status = "okay";
 };
 
+&remoteproc_adsp {
+	firmware-name = "qcom/sm6150/a70q/adsp.mdt";
+
+	status = "okay";
+};
+
 &tlmm {
 	/* These pins are assigned to secure-world peripherals by the firmware. */
 	gpio-reserved-ranges = <0 4>, <6 4>, <37 2>;
