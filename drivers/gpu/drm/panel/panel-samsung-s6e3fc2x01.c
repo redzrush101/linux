@@ -22,14 +22,28 @@
 
 #define MCS_ELVSS_ON            0xb1
 
+struct samsung_s6e3fc2x01;
+
+struct samsung_s6e3fc2x01_desc {
+	const struct drm_display_mode *mode;
+	const struct regulator_bulk_data *supplies;
+	unsigned int num_supplies;
+	unsigned long mode_flags;
+	void (*reset)(struct samsung_s6e3fc2x01 *ctx);
+	int (*on)(struct samsung_s6e3fc2x01 *ctx);
+	int (*enable)(struct samsung_s6e3fc2x01 *ctx);
+	int (*off)(struct samsung_s6e3fc2x01 *ctx);
+};
+
 struct samsung_s6e3fc2x01 {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
+	const struct samsung_s6e3fc2x01_desc *desc;
 	struct regulator_bulk_data *supplies;
 	struct gpio_desc *reset_gpio;
 };
 
-static const struct regulator_bulk_data s6e3fc2x01_supplies[] = {
+static const struct regulator_bulk_data ams641rw_supplies[] = {
 	{ .supply = "vddio" },
 	{ .supply = "vci" },
 	{ .supply = "poc" },
@@ -54,7 +68,7 @@ struct samsung_s6e3fc2x01 *to_samsung_s6e3fc2x01(struct drm_panel *panel)
 #define s6e3fc2x01_test_key_off_lvl3(ctx) \
 	mipi_dsi_dcs_write_seq_multi(ctx, 0xfc, 0xa5, 0xa5)
 
-static void s6e3fc2x01_reset(struct samsung_s6e3fc2x01 *ctx)
+static void ams641rw_reset(struct samsung_s6e3fc2x01 *ctx)
 {
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 	usleep_range(5000, 6000);
@@ -62,7 +76,7 @@ static void s6e3fc2x01_reset(struct samsung_s6e3fc2x01 *ctx)
 	usleep_range(5000, 6000);
 }
 
-static int s6e3fc2x01_on(struct samsung_s6e3fc2x01 *ctx)
+static int ams641rw_on(struct samsung_s6e3fc2x01 *ctx)
 {
 	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 
@@ -154,9 +168,8 @@ static int s6e3fc2x01_on(struct samsung_s6e3fc2x01 *ctx)
 	return dsi_ctx.accum_err;
 }
 
-static int s6e3fc2x01_enable(struct drm_panel *panel)
+static int ams641rw_enable(struct samsung_s6e3fc2x01 *ctx)
 {
-	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
 	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 
 	s6e3fc2x01_test_key_on_lvl1(&dsi_ctx);
@@ -166,7 +179,14 @@ static int s6e3fc2x01_enable(struct drm_panel *panel)
 	return dsi_ctx.accum_err;
 }
 
-static int s6e3fc2x01_off(struct samsung_s6e3fc2x01 *ctx)
+static int s6e3fc2x01_enable(struct drm_panel *panel)
+{
+	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
+
+	return ctx->desc->enable(ctx);
+}
+
+static int ams641rw_off(struct samsung_s6e3fc2x01 *ctx)
 {
 	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 
@@ -200,7 +220,7 @@ static int s6e3fc2x01_disable(struct drm_panel *panel)
 {
 	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
 
-	s6e3fc2x01_off(ctx);
+	ctx->desc->off(ctx);
 
 	return 0;
 }
@@ -210,16 +230,16 @@ static int s6e3fc2x01_prepare(struct drm_panel *panel)
 	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
 	int ret;
 
-	ret = regulator_bulk_enable(ARRAY_SIZE(s6e3fc2x01_supplies), ctx->supplies);
+	ret = regulator_bulk_enable(ctx->desc->num_supplies, ctx->supplies);
 	if (ret < 0)
 		return ret;
 
-	s6e3fc2x01_reset(ctx);
+	ctx->desc->reset(ctx);
 
-	ret = s6e3fc2x01_on(ctx);
+	ret = ctx->desc->on(ctx);
 	if (ret < 0) {
 		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-		regulator_bulk_disable(ARRAY_SIZE(s6e3fc2x01_supplies), ctx->supplies);
+		regulator_bulk_disable(ctx->desc->num_supplies, ctx->supplies);
 		return ret;
 	}
 
@@ -231,7 +251,7 @@ static int s6e3fc2x01_unprepare(struct drm_panel *panel)
 	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-	regulator_bulk_disable(ARRAY_SIZE(s6e3fc2x01_supplies), ctx->supplies);
+	regulator_bulk_disable(ctx->desc->num_supplies, ctx->supplies);
 
 	return 0;
 }
@@ -250,10 +270,24 @@ static const struct drm_display_mode ams641rw_mode = {
 	.height_mm = 145,
 };
 
+static const struct samsung_s6e3fc2x01_desc ams641rw_desc = {
+	.mode = &ams641rw_mode,
+	.supplies = ams641rw_supplies,
+	.num_supplies = ARRAY_SIZE(ams641rw_supplies),
+	.mode_flags = MIPI_DSI_MODE_VIDEO_BURST |
+		      MIPI_DSI_CLOCK_NON_CONTINUOUS | MIPI_DSI_MODE_LPM,
+	.reset = ams641rw_reset,
+	.on = ams641rw_on,
+	.enable = ams641rw_enable,
+	.off = ams641rw_off,
+};
+
 static int s6e3fc2x01_get_modes(struct drm_panel *panel,
 					struct drm_connector *connector)
 {
-	return drm_connector_helper_get_modes_fixed(connector, &ams641rw_mode);
+	struct samsung_s6e3fc2x01 *ctx = to_samsung_s6e3fc2x01(panel);
+
+	return drm_connector_helper_get_modes_fixed(connector, ctx->desc->mode);
 }
 
 static const struct drm_panel_funcs samsung_s6e3fc2x01_panel_funcs = {
@@ -311,9 +345,13 @@ static int s6e3fc2x01_probe(struct mipi_dsi_device *dsi)
 	if (IS_ERR(ctx))
 		return PTR_ERR(ctx);
 
+	ctx->desc = device_get_match_data(dev);
+	if (!ctx->desc)
+		return -ENODEV;
+
 	ret = devm_regulator_bulk_get_const(dev,
-					    ARRAY_SIZE(s6e3fc2x01_supplies),
-					    s6e3fc2x01_supplies,
+					    ctx->desc->num_supplies,
+					    ctx->desc->supplies,
 					    &ctx->supplies);
 	if (ret)
 		return dev_err_probe(dev, ret, "Failed to get regulators\n");
@@ -330,8 +368,7 @@ static int s6e3fc2x01_probe(struct mipi_dsi_device *dsi)
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
-	dsi->mode_flags = MIPI_DSI_MODE_VIDEO_BURST |
-			  MIPI_DSI_CLOCK_NON_CONTINUOUS | MIPI_DSI_MODE_LPM;
+	dsi->mode_flags = ctx->desc->mode_flags;
 
 	ctx->panel.prepare_prev_first = true;
 
@@ -365,7 +402,7 @@ static void s6e3fc2x01_remove(struct mipi_dsi_device *dsi)
 }
 
 static const struct of_device_id s6e3fc2x01_of_match[] = {
-	{ .compatible = "samsung,s6e3fc2x01-ams641rw", .data = &ams641rw_mode },
+	{ .compatible = "samsung,s6e3fc2x01-ams641rw", .data = &ams641rw_desc },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, s6e3fc2x01_of_match);
