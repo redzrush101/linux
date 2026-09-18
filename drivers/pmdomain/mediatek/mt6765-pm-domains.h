@@ -13,6 +13,29 @@
 #define MT6765_PWR_STATUS 0x180
 #define MT6765_PWR_STATUS_2ND 0x184
 
+#define MT6765_INFRA_TOPAXI_PROTECTEN_STA1	0x228
+#define MT6765_INFRA_TOPAXI_PROTECTEN_SET	0x2a0
+#define MT6765_INFRA_TOPAXI_PROTECTEN_CLR	0x2a4
+#define MT6765_INFRA_TOPAXI_PROTECTEN_1_STA1	0x258
+#define MT6765_INFRA_TOPAXI_PROTECTEN_1_SET	0x2a8
+#define MT6765_INFRA_TOPAXI_PROTECTEN_1_CLR	0x2ac
+
+#define MT6765_BUS_PROT_INFRA_WR_TOPAXI(_mask) \
+	BUS_PROT_WR_IGN(INFRA, _mask, \
+			MT6765_INFRA_TOPAXI_PROTECTEN_SET, \
+			MT6765_INFRA_TOPAXI_PROTECTEN_CLR, \
+			MT6765_INFRA_TOPAXI_PROTECTEN_STA1)
+
+#define MT6765_BUS_PROT_INFRA_WR_TOPAXI_1(_mask) \
+	BUS_PROT_WR_IGN(INFRA, _mask, \
+			MT6765_INFRA_TOPAXI_PROTECTEN_1_SET, \
+			MT6765_INFRA_TOPAXI_PROTECTEN_1_CLR, \
+			MT6765_INFRA_TOPAXI_PROTECTEN_1_STA1)
+
+static enum scpsys_bus_prot_block scpsys_bus_prot_blocks_mt6765[] = {
+	BUS_PROT_BLOCK_INFRA,
+};
+
 static const struct scpsys_domain_data scpsys_domain_data_mt6765[] = {
 	[MT6765_POWER_DOMAIN_MD1] = {
 		.name = "md1",
@@ -50,6 +73,12 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6765[] = {
 		.pwr_sta2nd_offs = MT6765_PWR_STATUS_2ND,
 		.sram_pdn_bits = GENMASK(8, 8),
 		.sram_pdn_ack_bits = GENMASK(12, 12),
+		.bp_cfg = {
+			MT6765_BUS_PROT_INFRA_WR_TOPAXI_1(BIT(19) | BIT(20)),
+			MT6765_BUS_PROT_INFRA_WR_TOPAXI_1(BIT(16) | BIT(17)),
+			MT6765_BUS_PROT_INFRA_WR_TOPAXI(BIT(10) | BIT(11)),
+			MT6765_BUS_PROT_INFRA_WR_TOPAXI(BIT(1) | BIT(2)),
+		},
 	},
 	[MT6765_POWER_DOMAIN_MFG] = {
 		.name = "mfg",
@@ -120,6 +149,8 @@ static const struct scpsys_domain_data scpsys_domain_data_mt6765[] = {
 static const struct scpsys_soc_data mt6765_scpsys_data = {
 	.domains_data = scpsys_domain_data_mt6765,
 	.num_domains = ARRAY_SIZE(scpsys_domain_data_mt6765),
+	.bus_prot_blocks = scpsys_bus_prot_blocks_mt6765,
+	.num_bus_prot_blocks = ARRAY_SIZE(scpsys_bus_prot_blocks_mt6765),
 };
 
 #endif /* __MT6765_PM_DOMAINS_H */
