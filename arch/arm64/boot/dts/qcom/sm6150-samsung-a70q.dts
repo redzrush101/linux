@@ -275,36 +275,18 @@
 };
 
 /*
- * The Samsung firmware requires platform-specific preparation before CPU
- * power collapse.  Keep the architectural WFI idle state until that support
- * is available in the mainline PSCI cpuidle path.
+ * Match the cluster modes and latency ordering used by the A70 firmware.
+ * CPU, rail, L3 power collapse and CX retention have passed staged validation.
+ * Enable the deepest LLCC-off/AOSS-sleep state for final validation.
  */
-&little_cpu_sleep_0 {
-	status = "disabled";
-};
-
-&little_cpu_sleep_1 {
-	status = "disabled";
-};
-
-&big_cpu_sleep_0 {
-	status = "disabled";
-};
-
-&big_cpu_sleep_1 {
-	status = "disabled";
-};
-
-&cluster_sleep_0 {
-	status = "disabled";
-};
-
 &cluster_sleep_1 {
-	status = "disabled";
+	arm,psci-suspend-param = <0x41001244>;
+	entry-latency-us = <3638>;
 };
 
 &cluster_sleep_2 {
-	status = "disabled";
+	arm,psci-suspend-param = <0x4100b244>;
+	entry-latency-us = <3263>;
 };
 
 &apps_rsc {
