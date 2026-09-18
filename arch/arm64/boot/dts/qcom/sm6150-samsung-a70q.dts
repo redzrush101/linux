@@ -376,6 +376,14 @@
 	};
 };
 
+/*
+ * Downstream has no fabric-level A1 NoC QoS clocks. Keep QoS programming
+ * disabled until its node-specific clock ownership can be represented.
+ */
+&aggre1_noc {
+	/delete-property/ clocks;
+};
+
 &dispcc {
 	status = "okay";
 };
