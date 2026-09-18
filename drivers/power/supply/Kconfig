@@ -1181,6 +1181,27 @@ config CHARGER_QCOM_SMB2
 	  adds support for the SMB2 switch mode battery charger found
 	  in PMI8998 and related PMICs.
 
+config BATTERY_QCOM_QG
+	tristate "Qualcomm PMIC QGauge fuel gauge"
+	depends on MFD_SPMI_PMIC
+	depends on IIO
+	help
+	  Say Y here to enable the Qualcomm PMIC QGauge fuel gauge used
+	  by PM6150 and related PMICs. The driver reports battery voltage,
+	  current, temperature and state of charge through power_supply.
+
+config CHARGER_QCOM_SMB5
+	tristate "Qualcomm PM6150 SMB5 charger driver"
+	depends on MFD_SPMI_PMIC
+	depends on IIO
+	depends on THERMAL_OF
+	select QCOM_VADC_COMMON
+	help
+	  Say Y here to enable the Qualcomm SMB5 switch-mode charger used
+	  by PM6150 and related PMICs. The driver handles sink charging,
+	  BC1.2 source detection, AICL and charger safety functions. Type-C
+	  and source VBUS remain owned by the PMIC TCPM and VBUS drivers.
+
 config FUEL_GAUGE_MM8013
 	tristate "Mitsumi MM8013 fuel gauge driver"
 	depends on I2C
