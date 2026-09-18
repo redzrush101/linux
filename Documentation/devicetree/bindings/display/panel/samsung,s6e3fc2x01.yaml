@@ -14,16 +14,40 @@ description: The S6E3FC2X01 is display driver IC with connected panel.
 allOf:
   - $ref: panel-common.yaml#
 
+  - if:
+      properties:
+        compatible:
+          contains:
+            const: samsung,s6e3fc2x01-ams641rw
+    then:
+      required:
+        - poc-supply
+        - vci-supply
+
+  - if:
+      properties:
+        compatible:
+          contains:
+            const: samsung,s6e3fc2x01-ams670ta01
+    then:
+      required:
+        - enable-gpios
+        - vci-supply
+
 properties:
   compatible:
     items:
       - enum:
             # Samsung 6.41 inch, 1080x2340 pixels, 19.5:9 ratio
           - samsung,s6e3fc2x01-ams641rw
+            # Samsung 6.7 inch, 1080x2400 pixels, 20:9 ratio
+          - samsung,s6e3fc2x01-ams670ta01
       - const: samsung,s6e3fc2x01
 
   reg:
     maxItems: 1
+
+  enable-gpios: true
 
   poc-supply:
     description: POC regulator
@@ -37,8 +61,6 @@ properties:
 required:
   - compatible
   - reset-gpios
-  - poc-supply
-  - vci-supply
   - vddio-supply
 
 unevaluatedProperties: false
