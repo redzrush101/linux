@@ -1,0 +1,276 @@
+// SPDX-License-Identifier: GPL-2.0
+/dts-v1/;
+
+#include <dt-bindings/pinctrl/mediatek,mt6765-pinfunc.h>
+
+#include "mt6765.dtsi"
+#include "mt6357.dtsi"
+
+/ {
+	model = "Lenovo Tab M10 FHD Plus (TB-X606F)";
+	compatible = "lenovo,tbx606f", "mediatek,mt6765";
+	chassis-type = "tablet";
+
+	aliases {
+		display0 = &framebuffer0;
+		mmc0 = &mmc0;
+	};
+
+	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		framebuffer0: framebuffer@7dfe0000 {
+			compatible = "simple-framebuffer";
+			memory-region = <&framebuffer_reserved>;
+			power-domains = <&spm MT6765_POWER_DOMAIN_DISP>;
+
+			clocks = <&mmsys CLK_MM_DISP_OVL0>,
+				 <&mmsys CLK_MM_DISP_OVL0_2L>,
+				 <&mmsys CLK_MM_DISP_RSZ0>,
+				 <&mmsys CLK_MM_DISP_RDMA0>,
+				 <&mmsys CLK_MM_DISP_WDMA0>,
+				 <&mmsys CLK_MM_DISP_COLOR0>,
+				 <&mmsys CLK_MM_DISP_CCORR0>,
+				 <&mmsys CLK_MM_DISP_AAL0>,
+				 <&mmsys CLK_MM_DISP_GAMMA0>,
+				 <&mmsys CLK_MM_DISP_DITHER0>,
+				 <&mmsys CLK_MM_DSI0>,
+				 <&mmsys CLK_MM_SMI_COMMON>,
+				 <&mmsys CLK_MM_SMI_LARB0>,
+				 <&mmsys CLK_MM_SMI_COMM0>,
+				 <&mmsys CLK_MM_SMI_COMM1>,
+				 <&mmsys CLK_MM_DIG_DSI>,
+				 <&mmsys CLK_MM_F26M_HRTWT>,
+				 <&apmixed CLK_APMIXED_MIPID0_26M>,
+				 <&infracfg CLK_IFR_DISP_PWM>;
+
+			width = <1200>;
+			height = <1920>;
+			stride = <4864>;
+			format = "a8b8g8r8";
+		};
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0 0x40000000 1 0>;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		ram_console: memory@47c80000 {
+			reg = <0 0x47c80000 0 0x10000>;
+		};
+
+		ramoops@47c90000 {
+			compatible = "ramoops";
+			reg = <0 0x47c90000 0 0xe0000>;
+			record-size = <0x1000>;
+			console-size = <0x40000>;
+			pmsg-size = <0x10000>;
+		};
+
+		minirdump: memory@47d70000 {
+			reg = <0 0x47d70000 0 0x10000>;
+		};
+
+		atf_reserved: memory@47d80000 {
+			reg = <0 0x47d80000 0 0x50000>;
+			no-map;
+		};
+
+		tee_reserved: memory@70000000 {
+			reg = <0 0x70000000 0 0x6040000>;
+			no-map;
+		};
+
+		spm_reserved: memory@77ff0000 {
+			reg = <0 0x77ff0000 0 0x10000>;
+			no-map;
+		};
+
+		framebuffer_reserved: framebuffer@7dfe0000 {
+			reg = <0 0x7dfe0000 0 0x1f20000>;
+			no-map;
+		};
+
+		sspm_reserved: memory@7ff00000 {
+			reg = <0 0x7ff00000 0 0xc0000>;
+			no-map;
+		};
+
+		log_store: memory@7ffc0000 {
+			reg = <0 0x7ffc0000 0 0x40000>;
+		};
+
+		scp_reserved: memory@9f900000 {
+			reg = <0 0x9f900000 0 0x600000>;
+			no-map;
+		};
+
+		atf_ramdump: memory@bff70000 {
+			reg = <0 0xbff70000 0 0x80000>;
+			no-map;
+		};
+
+		dramc_rk0: memory@bffff000 {
+			reg = <0 0xbffff000 0 0x1000>;
+			no-map;
+		};
+
+		dramc_rk1: memory@13ffff000 {
+			reg = <1 0x3ffff000 0 0x1000>;
+			no-map;
+		};
+	};
+};
+
+&cpu0 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu1 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu2 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu3 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu4 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu5 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu6 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&cpu7 {
+	proc-supply = <&mt6357_vproc_reg>;
+	sram-supply = <&mt6357_vsram_proc_reg>;
+};
+
+&mmc0 {
+	status = "okay";
+
+	pinctrl-names = "default", "state_uhs";
+	pinctrl-0 = <&mmc0_pins_default>;
+	pinctrl-1 = <&mmc0_pins_uhs>;
+
+	bus-width = <8>;
+	cap-mmc-highspeed;
+	mmc-ddr-1_8v;
+	mmc-hs200-1_8v;
+	mmc-hs400-1_8v;
+	cap-mmc-hw-reset;
+	supports-cqe;
+	max-frequency = <200000000>;
+	non-removable;
+
+	vmmc-supply = <&mt6357_vemc_reg>;
+	vqmmc-supply = <&mt6357_vio18_reg>;
+	hs400-ds-delay = <0x12814>;
+};
+
+&mt6357_vdram_reg {
+	regulator-always-on;
+};
+
+&pio {
+	mmc0_pins_default: mmc0-pins-default {
+		pins-cmd-dat {
+			pinmux = <PINMUX_GPIO129__FUNC_MSDC0_DAT0>,
+				 <PINMUX_GPIO127__FUNC_MSDC0_DAT1>,
+				 <PINMUX_GPIO126__FUNC_MSDC0_DAT2>,
+				 <PINMUX_GPIO132__FUNC_AUX1_MSDC0_DAT3>,
+				 <PINMUX_GPIO123__FUNC_MSDC0_DAT4>,
+				 <PINMUX_GPIO125__FUNC_MSDC0_DAT5>,
+				 <PINMUX_GPIO128__FUNC_MSDC0_DAT6>,
+				 <PINMUX_GPIO130__FUNC_AUX2_MSDC0_DAT7>,
+				 <PINMUX_GPIO122__FUNC_AUX2_MSDC0_CMD>;
+			input-enable;
+			drive-strength = <3>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+		};
+
+		pins-clk {
+			pinmux = <PINMUX_GPIO124__FUNC_AUX2_MSDC0_CLK>;
+			drive-strength = <3>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+		};
+
+		pins-rst {
+			pinmux = <PINMUX_GPIO133__FUNC_AUX2_MSDC0_RSTB>;
+			drive-strength = <3>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_01>;
+		};
+	};
+
+	mmc0_pins_uhs: mmc0-pins-uhs {
+		pins-cmd-dat {
+			pinmux = <PINMUX_GPIO129__FUNC_MSDC0_DAT0>,
+				 <PINMUX_GPIO127__FUNC_MSDC0_DAT1>,
+				 <PINMUX_GPIO126__FUNC_MSDC0_DAT2>,
+				 <PINMUX_GPIO132__FUNC_AUX1_MSDC0_DAT3>,
+				 <PINMUX_GPIO123__FUNC_MSDC0_DAT4>,
+				 <PINMUX_GPIO125__FUNC_MSDC0_DAT5>,
+				 <PINMUX_GPIO128__FUNC_MSDC0_DAT6>,
+				 <PINMUX_GPIO130__FUNC_AUX2_MSDC0_DAT7>,
+				 <PINMUX_GPIO122__FUNC_AUX2_MSDC0_CMD>;
+			input-enable;
+			drive-strength = <4>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+		};
+
+		pins-clk {
+			pinmux = <PINMUX_GPIO124__FUNC_AUX2_MSDC0_CLK>;
+			drive-strength = <4>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+		};
+
+		pins-ds {
+			pinmux = <PINMUX_GPIO131__FUNC_AUX2_MSDC0_DSL>;
+			drive-strength = <4>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+		};
+
+		pins-rst {
+			pinmux = <PINMUX_GPIO133__FUNC_AUX2_MSDC0_RSTB>;
+			drive-strength = <3>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_01>;
+		};
+	};
+};
+
+&pwrap {
+	status = "okay";
+};
+
+&u2phy {
+	status = "okay";
+};
+
+&usb2 {
+	dr_mode = "peripheral";
+	status = "okay";
+};
