@@ -873,6 +873,7 @@ static const struct rpmhpd_desc qcs8300_desc = {
 static struct rpmhpd *qcs615_rpmhpds[] = {
 	[RPMHPD_CX] = &cx,
 	[RPMHPD_CX_AO] = &cx_ao,
+	[RPMHPD_LCX] = &lcx,
 };
 
 static const struct rpmhpd_desc qcs615_desc = {
