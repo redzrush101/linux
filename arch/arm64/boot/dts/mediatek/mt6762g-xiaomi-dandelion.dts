@@ -539,4 +539,3 @@ phy-supply = <&mt6357_vusb33_fixed_reg>;
 &iommu {
 	status = "disabled";
 };
-
