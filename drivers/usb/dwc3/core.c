@@ -2539,9 +2539,27 @@ assert_reset:
 	return ret;
 }
 
-static int dwc3_suspend_common(struct dwc3 *dwc, pm_message_t msg)
+static void dwc3_suspend_usb2_phy(struct dwc3 *dwc)
 {
 	u32 reg;
+	int i;
+
+	if (!dwc->dis_u2_susphy_quirk && !dwc->dis_enblslpm_quirk)
+		return;
+
+	for (i = 0; i < dwc->num_usb2_ports; i++) {
+		reg = dwc3_readl(dwc, DWC3_GUSB2PHYCFG(i));
+		reg |= DWC3_GUSB2PHYCFG_ENBLSLPM |
+		       DWC3_GUSB2PHYCFG_SUSPHY;
+		dwc3_writel(dwc, DWC3_GUSB2PHYCFG(i), reg);
+	}
+
+	/* Give some time for USB2 PHY to suspend. */
+	usleep_range(5000, 6000);
+}
+
+static int dwc3_suspend_common(struct dwc3 *dwc, pm_message_t msg)
+{
 	int i;
 	int ret;
 
@@ -2566,6 +2584,7 @@ static int dwc3_suspend_common(struct dwc3 *dwc, pm_message_t msg)
 		if (ret)
 			return ret;
 		synchronize_irq(dwc->irq_gadget);
+		dwc3_suspend_usb2_phy(dwc);
 		dwc3_core_exit(dwc);
 		break;
 	case DWC3_GCTL_PRTCAP_HOST:
@@ -2575,19 +2594,8 @@ static int dwc3_suspend_common(struct dwc3 *dwc, pm_message_t msg)
 			break;
 		}
 
-		/* Let controller to suspend HSPHY before PHY driver suspends */
-		if (dwc->dis_u2_susphy_quirk ||
-		    dwc->dis_enblslpm_quirk) {
-			for (i = 0; i < dwc->num_usb2_ports; i++) {
-				reg = dwc3_readl(dwc, DWC3_GUSB2PHYCFG(i));
-				reg |=  DWC3_GUSB2PHYCFG_ENBLSLPM |
-					DWC3_GUSB2PHYCFG_SUSPHY;
-				dwc3_writel(dwc, DWC3_GUSB2PHYCFG(i), reg);
-			}
-
-			/* Give some time for USB2 PHY to suspend */
-			usleep_range(5000, 6000);
-		}
+		/* Let controller suspend HSPHY before PHY driver suspends. */
+		dwc3_suspend_usb2_phy(dwc);
 
 		for (i = 0; i < dwc->num_usb2_ports; i++)
 			phy_pm_runtime_put_sync(dwc->usb2_generic_phy[i]);
@@ -2604,6 +2612,7 @@ static int dwc3_suspend_common(struct dwc3 *dwc, pm_message_t msg)
 			if (ret)
 				return ret;
 			synchronize_irq(dwc->irq_gadget);
+			dwc3_suspend_usb2_phy(dwc);
 		}
 
 		dwc3_otg_exit(dwc);
