@@ -56,6 +56,7 @@ properties:
           - const: mediatek,mt6755
       - items:
           - enum:
+              - lenovo,tbx606f
               - mediatek,mt6765-evb
           - const: mediatek,mt6765
       - items:
