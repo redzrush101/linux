@@ -26,7 +26,8 @@ properties:
       Specifies static port mapping between device and host tx ports.
       In the order of the device port index which are adc1_port, adc23_port,
       dmic03_mbhc_port, dmic46_port.
-      Supports maximum 4 tx soundwire ports.
+      Supports maximum 4 tx soundwire ports. SM6150 connects them to
+      TX master ports 2 to 5.
 
       WCD9370 TX Port 1 (ADC1)               <=> SWR2 Port 2
       WCD9370 TX Port 2 (ADC2, 3)            <=> SWR2 Port 2
@@ -37,7 +38,7 @@ properties:
     minItems: 4
     maxItems: 4
     items:
-      enum: [1, 2, 3, 4]
+      enum: [1, 2, 3, 4, 5]
 
   qcom,rx-port-mapping:
     description: |
