@@ -20,6 +20,9 @@ properties:
           - qcom,sm8550-lpass-va-macro
           - qcom,sc8280xp-lpass-va-macro
       - items:
+          - const: qcom,qcs615-lpass-va-macro
+          - const: qcom,sm8250-lpass-va-macro
+      - items:
           - enum:
               - qcom,eliza-lpass-va-macro
               - qcom,glymur-lpass-va-macro
@@ -119,8 +122,8 @@ allOf:
   - if:
       properties:
         compatible:
-          contains:
-            const: qcom,sm8250-lpass-va-macro
+          enum:
+            - qcom,sm8250-lpass-va-macro
     then:
       properties:
         clocks:
@@ -131,6 +134,21 @@ allOf:
             - const: mclk
             - const: macro
             - const: dcodec
+
+  - if:
+      properties:
+        compatible:
+          contains:
+            const: qcom,qcs615-lpass-va-macro
+    then:
+      properties:
+        clocks:
+          minItems: 2
+          maxItems: 2
+        clock-names:
+          items:
+            - const: mclk
+            - const: macro
 
   - if:
       properties:
