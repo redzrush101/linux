@@ -17,7 +17,9 @@ properties:
           - qcom,pm660-charger
           - qcom,pm8150b-charger
       - items:
-          - const: qcom,pm7250b-charger
+          - enum:
+              - qcom,pm6150-charger
+              - qcom,pm7250b-charger
           - const: qcom,pm8150b-charger
 
   reg:
