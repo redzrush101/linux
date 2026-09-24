@@ -99,6 +99,8 @@ struct wcd937x_priv {
 	int hphr_pdm_wd_int;
 	int hphl_pdm_wd_int;
 	int aux_pdm_wd_int;
+	unsigned int hphl_pdm_wd_users;
+	unsigned int aux_pdm_wd_users;
 	bool comp1_enable;
 	bool comp2_enable;
 
@@ -574,6 +576,22 @@ static int wcd937x_codec_aux_dac_event(struct snd_soc_dapm_widget *w,
 	return 0;
 }
 
+/* EAR shares the HPHL or AUX watchdog interrupt with the corresponding PA. */
+static void wcd937x_pdm_wd_irq_enable(int irq, unsigned int *users)
+{
+	if (!(*users)++)
+		enable_irq(irq);
+}
+
+static void wcd937x_pdm_wd_irq_disable(int irq, unsigned int *users)
+{
+	if (WARN_ON(!*users))
+		return;
+
+	if (!--*users)
+		disable_irq_nosync(irq);
+}
+
 static int wcd937x_codec_enable_hphr_pa(struct snd_soc_dapm_widget *w,
 					struct snd_kcontrol *kcontrol,
 					int event)
@@ -680,10 +698,12 @@ static int wcd937x_codec_enable_hphl_pa(struct snd_soc_dapm_widget *w,
 			snd_soc_component_update_bits(component,
 						      WCD937X_ANA_RX_SUPPLIES,
 						      BIT(1), BIT(1));
-		enable_irq(wcd937x->hphl_pdm_wd_int);
+		wcd937x_pdm_wd_irq_enable(wcd937x->hphl_pdm_wd_int,
+					  &wcd937x->hphl_pdm_wd_users);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
-		disable_irq_nosync(wcd937x->hphl_pdm_wd_int);
+		wcd937x_pdm_wd_irq_disable(wcd937x->hphl_pdm_wd_int,
+					   &wcd937x->hphl_pdm_wd_users);
 		set_bit(HPH_PA_DELAY, &wcd937x->status_mask);
 		wcd_mbhc_event_notify(wcd937x->wcd_mbhc, WCD_EVENT_PRE_HPHL_PA_OFF);
 		break;
@@ -743,10 +763,12 @@ static int wcd937x_codec_enable_aux_pa(struct snd_soc_dapm_widget *w,
 		snd_soc_component_update_bits(component,
 					      WCD937X_ANA_RX_SUPPLIES,
 					      BIT(7), BIT(7));
-		enable_irq(wcd937x->aux_pdm_wd_int);
+		wcd937x_pdm_wd_irq_enable(wcd937x->aux_pdm_wd_int,
+					  &wcd937x->aux_pdm_wd_users);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
-		disable_irq_nosync(wcd937x->aux_pdm_wd_int);
+		wcd937x_pdm_wd_irq_disable(wcd937x->aux_pdm_wd_int,
+					   &wcd937x->aux_pdm_wd_users);
 		snd_soc_component_update_bits(component,
 					      WCD937X_ANA_RX_SUPPLIES,
 					      BIT(6), 0x00);
@@ -805,15 +827,19 @@ static int wcd937x_codec_enable_ear_pa(struct snd_soc_dapm_widget *w,
 						      BIT(1), BIT(1));
 
 		if (wcd937x->ear_rx_path & EAR_RX_PATH_AUX)
-			enable_irq(wcd937x->aux_pdm_wd_int);
+			wcd937x_pdm_wd_irq_enable(wcd937x->aux_pdm_wd_int,
+						  &wcd937x->aux_pdm_wd_users);
 		else
-			enable_irq(wcd937x->hphl_pdm_wd_int);
+			wcd937x_pdm_wd_irq_enable(wcd937x->hphl_pdm_wd_int,
+						  &wcd937x->hphl_pdm_wd_users);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		if (wcd937x->ear_rx_path & EAR_RX_PATH_AUX)
-			disable_irq_nosync(wcd937x->aux_pdm_wd_int);
+			wcd937x_pdm_wd_irq_disable(wcd937x->aux_pdm_wd_int,
+						   &wcd937x->aux_pdm_wd_users);
 		else
-			disable_irq_nosync(wcd937x->hphl_pdm_wd_int);
+			wcd937x_pdm_wd_irq_disable(wcd937x->hphl_pdm_wd_int,
+						   &wcd937x->hphl_pdm_wd_users);
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 		if (!wcd937x->comp1_enable)
