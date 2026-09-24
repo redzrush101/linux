@@ -723,6 +723,15 @@ static void wsa881x_init(struct wsa881x_priv *wsa881x)
 	regmap_update_bits(rm, WSA881X_BONGO_RESRV_REG1, 0xFF, 0xB2);
 	regmap_update_bits(rm, WSA881X_BONGO_RESRV_REG2, 0xFF, 0x05);
 
+	/*
+	 * These registers back mixer controls and DAPM widgets but have no
+	 * register default. Read them while the device is attached so they
+	 * are cached and remain readable while runtime suspended.
+	 */
+	regmap_read(rm, WSA881X_SPKR_DRV_GAIN, &val);
+	regmap_read(rm, WSA881X_SPKR_DAC_CTL, &val);
+	regmap_read(rm, WSA881X_BOOST_PRESET_OUT1, &val);
+
 	wsa881x->hw_init = true;
 }
 
