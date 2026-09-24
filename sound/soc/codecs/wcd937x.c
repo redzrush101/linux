@@ -2919,7 +2919,8 @@ static int wcd937x_probe(struct platform_device *pdev)
 				"us-euro swap Control GPIO not found\n");
 
 	cfg = &wcd937x->mbhc_cfg;
-	cfg->swap_gnd_mic = wcd937x_swap_gnd_mic;
+	if (wcd937x->us_euro_gpio)
+		cfg->swap_gnd_mic = wcd937x_swap_gnd_mic;
 
 	ret = devm_regulator_bulk_get_enable(dev, ARRAY_SIZE(wcd937x_supplies),
 					     wcd937x_supplies);
