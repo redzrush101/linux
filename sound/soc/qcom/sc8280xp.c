@@ -38,6 +38,14 @@ static struct snd_soc_dapm_widget sc8280xp_dapm_widgets[] = {
 	SND_SOC_DAPM_SPK("DP7 Jack", NULL),
 };
 
+static const struct snd_soc_dapm_widget a70q_dapm_widgets[] = {
+	SND_SOC_DAPM_HP("Headphone Jack", NULL),
+	SND_SOC_DAPM_MIC("Mic Jack", NULL),
+	SND_SOC_DAPM_MIC("Main Mic", NULL),
+	SND_SOC_DAPM_MIC("Secondary Mic", NULL),
+	SND_SOC_DAPM_SPK("Earpiece", NULL),
+};
+
 static const struct snd_kcontrol_new max98090_controls[] = {
 	SOC_DAPM_PIN_SWITCH("Headset Mic12"),
 	SOC_DAPM_PIN_SWITCH("Headphone"),
@@ -671,6 +679,13 @@ static const struct qcom_snd_soc_common sm8750_priv_data = {
 	.wcd_jack = true,
 };
 
+static const struct qcom_snd_soc_common a70q_priv_data = {
+	.driver_name = "a70q",
+	.dapm_widgets = a70q_dapm_widgets,
+	.num_dapm_widgets = ARRAY_SIZE(a70q_dapm_widgets),
+	.wcd_jack = true,
+};
+
 static const struct of_device_id snd_sc8280xp_dt_match[] = {
 	{ .compatible = "ayaneo,pocket-s2-sndcard", .data = &ayaneo_ps2_priv_data },
 	{ .compatible = "qcom,eliza-sndcard", .data = &eliza_priv_data },
@@ -690,6 +705,7 @@ static const struct of_device_id snd_sc8280xp_dt_match[] = {
 	{ .compatible = "qcom,sm8550-sndcard", .data = &sm8550_priv_data },
 	{ .compatible = "qcom,sm8650-sndcard", .data = &sm8650_priv_data },
 	{ .compatible = "qcom,sm8750-sndcard", .data = &sm8750_priv_data },
+	{ .compatible = "samsung,a70q-sndcard", .data = &a70q_priv_data },
 	{}
 };
 
