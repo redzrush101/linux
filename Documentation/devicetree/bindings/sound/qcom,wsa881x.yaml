@@ -20,7 +20,9 @@ allOf:
 
 properties:
   compatible:
-    const: sdw10217201000
+    enum:
+      - sdw10217201000
+      - sdw10217211000
 
   reg:
     maxItems: 1
