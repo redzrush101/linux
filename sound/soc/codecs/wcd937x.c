@@ -300,7 +300,7 @@ static int wcd937x_rx_clk_enable(struct snd_soc_component *component)
 {
 	struct wcd937x_priv *wcd937x = snd_soc_component_get_drvdata(component);
 
-	if (atomic_read(&wcd937x->rx_clk_cnt))
+	if (atomic_inc_return(&wcd937x->rx_clk_cnt) > 1)
 		return 0;
 
 	snd_soc_component_update_bits(component, WCD937X_DIGITAL_CDC_DIG_CLK_CTL, BIT(3), BIT(3));
@@ -310,8 +310,6 @@ static int wcd937x_rx_clk_enable(struct snd_soc_component *component)
 	snd_soc_component_update_bits(component, WCD937X_DIGITAL_CDC_RX1_CTL, BIT(6), 0x00);
 	snd_soc_component_update_bits(component, WCD937X_DIGITAL_CDC_RX2_CTL, BIT(6), 0x00);
 	snd_soc_component_update_bits(component, WCD937X_DIGITAL_CDC_ANA_CLK_CTL, BIT(1), BIT(1));
-
-	atomic_inc(&wcd937x->rx_clk_cnt);
 
 	return 0;
 }
@@ -325,7 +323,8 @@ static int wcd937x_rx_clk_disable(struct snd_soc_component *component)
 		return 0;
 	}
 
-	atomic_dec(&wcd937x->rx_clk_cnt);
+	if (atomic_dec_return(&wcd937x->rx_clk_cnt))
+		return 0;
 
 	snd_soc_component_update_bits(component, WCD937X_ANA_RX_SUPPLIES, BIT(0), 0x00);
 	snd_soc_component_update_bits(component, WCD937X_DIGITAL_CDC_ANA_CLK_CTL, BIT(1), 0x00);
