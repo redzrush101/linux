@@ -1532,10 +1532,10 @@ static int wcd937x_mbhc_micb_ctrl_threshold_mic(struct snd_soc_component *compon
 	 * voltage needed to detect threshold microphone, then do
 	 * not change the micbias, just return.
 	 */
-	if (wcd937x->common.micb_mv[2] >= WCD_MBHC_THR_HS_MICB_MV)
+	if (wcd937x->common.micb_mv[MIC_BIAS_2 - 1] >= WCD_MBHC_THR_HS_MICB_MV)
 		return 0;
 
-	micb_mv = req_en ? WCD_MBHC_THR_HS_MICB_MV : wcd937x->common.micb_mv[2];
+	micb_mv = req_en ? WCD_MBHC_THR_HS_MICB_MV : wcd937x->common.micb_mv[MIC_BIAS_2 - 1];
 
 	return wcd937x_mbhc_micb_adjust_voltage(component, micb_mv, MIC_BIAS_2);
 }
@@ -2934,7 +2934,7 @@ static int wcd937x_probe(struct platform_device *pdev)
 	cfg->anc_micbias = MIC_BIAS_2;
 	cfg->v_hs_max = WCD_MBHC_HS_V_MAX;
 	cfg->num_btn = WCD937X_MBHC_MAX_BUTTONS;
-	cfg->micb_mv = wcd937x->common.micb_mv[2];
+	cfg->micb_mv = wcd937x->common.micb_mv[MIC_BIAS_2 - 1];
 	cfg->linein_th = 5000;
 	cfg->hs_thr = 1700;
 	cfg->hph_thr = 50;
