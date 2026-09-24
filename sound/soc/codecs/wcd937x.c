@@ -1570,7 +1570,7 @@ static void wcd937x_mbhc_get_result_params(struct snd_soc_component *component,
 		usleep_range(5000, 5050);
 
 	if (!c1 || !x1) {
-		dev_err(component->dev, "Impedance detect ramp error, c1=%d, x1=0x%x\n",
+		dev_dbg(component->dev, "Impedance detect ramp error, c1=%d, x1=0x%x\n",
 			c1, x1);
 		goto ramp_down;
 	}
@@ -1581,7 +1581,7 @@ static void wcd937x_mbhc_get_result_params(struct snd_soc_component *component,
 	else if (x1 < minCode_param[noff])
 		*zdet = WCD937X_ZDET_FLOATING_IMPEDANCE;
 
-	dev_err(component->dev, "%s: d1=%d, c1=%d, x1=0x%x, z_val=%d (milliohm)\n",
+	dev_dbg(component->dev, "%s: d1=%d, c1=%d, x1=0x%x, z_val=%d (milliohm)\n",
 		__func__, d1, c1, x1, *zdet);
 ramp_down:
 	i = 0;
