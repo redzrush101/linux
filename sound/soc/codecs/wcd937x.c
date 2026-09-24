@@ -2555,29 +2555,41 @@ static int wcd937x_soc_codec_probe(struct snd_soc_component *component)
 
 	wcd937x->hphr_pdm_wd_int = regmap_irq_get_virq(wcd937x->irq_chip,
 						       WCD937X_IRQ_HPHR_PDM_WD_INT);
+	if (wcd937x->hphr_pdm_wd_int <= 0) {
+		ret = wcd937x->hphr_pdm_wd_int ?: -ENOMEM;
+		goto err_clsh;
+	}
 	wcd937x->hphl_pdm_wd_int = regmap_irq_get_virq(wcd937x->irq_chip,
 						       WCD937X_IRQ_HPHL_PDM_WD_INT);
+	if (wcd937x->hphl_pdm_wd_int <= 0) {
+		ret = wcd937x->hphl_pdm_wd_int ?: -ENOMEM;
+		goto err_clsh;
+	}
 	wcd937x->aux_pdm_wd_int = regmap_irq_get_virq(wcd937x->irq_chip,
 						      WCD937X_IRQ_AUX_PDM_WD_INT);
+	if (wcd937x->aux_pdm_wd_int <= 0) {
+		ret = wcd937x->aux_pdm_wd_int ?: -ENOMEM;
+		goto err_clsh;
+	}
 
 	/* Request for watchdog interrupt */
 	ret = devm_request_threaded_irq(dev, wcd937x->hphr_pdm_wd_int, NULL, wcd937x_wd_handle_irq,
 					IRQF_ONESHOT | IRQF_TRIGGER_RISING,
 					"HPHR PDM WDOG INT", wcd937x);
 	if (ret)
-		dev_err(dev, "Failed to request HPHR watchdog interrupt (%d)\n", ret);
+		goto err_clsh;
 
 	ret = devm_request_threaded_irq(dev, wcd937x->hphl_pdm_wd_int, NULL, wcd937x_wd_handle_irq,
 					IRQF_ONESHOT | IRQF_TRIGGER_RISING,
 					"HPHL PDM WDOG INT", wcd937x);
 	if (ret)
-		dev_err(dev, "Failed to request HPHL watchdog interrupt (%d)\n", ret);
+		goto err_hphr_irq;
 
 	ret = devm_request_threaded_irq(dev, wcd937x->aux_pdm_wd_int, NULL, wcd937x_wd_handle_irq,
 					IRQF_ONESHOT | IRQF_TRIGGER_RISING,
 					"AUX PDM WDOG INT", wcd937x);
 	if (ret)
-		dev_err(dev, "Failed to request Aux watchdog interrupt (%d)\n", ret);
+		goto err_hphl_irq;
 
 	/* Disable watchdog interrupt for HPH and AUX */
 	disable_irq_nosync(wcd937x->hphr_pdm_wd_int);
@@ -2589,24 +2601,32 @@ static int wcd937x_soc_codec_probe(struct snd_soc_component *component)
 						ARRAY_SIZE(wcd9375_dapm_widgets));
 		if (ret < 0) {
 			dev_err(component->dev, "Failed to add snd_ctls\n");
-			wcd_clsh_ctrl_free(wcd937x->clsh_info);
-			return ret;
+			goto err_aux_irq;
 		}
 
 		ret = snd_soc_dapm_add_routes(dapm, wcd9375_audio_map,
 					      ARRAY_SIZE(wcd9375_audio_map));
 		if (ret < 0) {
 			dev_err(component->dev, "Failed to add routes\n");
-			wcd_clsh_ctrl_free(wcd937x->clsh_info);
-			return ret;
+			goto err_aux_irq;
 		}
 	}
 
 	ret = wcd937x_mbhc_init(component);
 	if (ret)
-		dev_err(component->dev, "mbhc initialization failed\n");
+		goto err_aux_irq;
 
-	return ret;
+	return 0;
+
+err_aux_irq:
+	devm_free_irq(dev, wcd937x->aux_pdm_wd_int, wcd937x);
+err_hphl_irq:
+	devm_free_irq(dev, wcd937x->hphl_pdm_wd_int, wcd937x);
+err_hphr_irq:
+	devm_free_irq(dev, wcd937x->hphr_pdm_wd_int, wcd937x);
+err_clsh:
+	wcd_clsh_ctrl_free(wcd937x->clsh_info);
+	return dev_err_probe(dev, ret, "failed to initialize codec\n");
 }
 
 static void wcd937x_soc_codec_remove(struct snd_soc_component *component)
@@ -2614,9 +2634,9 @@ static void wcd937x_soc_codec_remove(struct snd_soc_component *component)
 	struct wcd937x_priv *wcd937x = snd_soc_component_get_drvdata(component);
 
 	wcd937x_mbhc_deinit(component);
-	free_irq(wcd937x->aux_pdm_wd_int, wcd937x);
-	free_irq(wcd937x->hphl_pdm_wd_int, wcd937x);
-	free_irq(wcd937x->hphr_pdm_wd_int, wcd937x);
+	devm_free_irq(component->dev, wcd937x->aux_pdm_wd_int, wcd937x);
+	devm_free_irq(component->dev, wcd937x->hphl_pdm_wd_int, wcd937x);
+	devm_free_irq(component->dev, wcd937x->hphr_pdm_wd_int, wcd937x);
 
 	wcd_clsh_ctrl_free(wcd937x->clsh_info);
 }
