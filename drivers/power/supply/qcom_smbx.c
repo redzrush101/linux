@@ -1050,6 +1050,24 @@ static int smb_power_supply_init(struct power_supply *psy)
 			goto out_put_batt_info;
 		}
 
+		/*
+		 * A battery with an operating temperature range has a
+		 * thermistor. Let the charger stop charging outside the hard
+		 * JEITA thresholds; they are left at their PMIC defaults.
+		 */
+		if (smb_batt_info_has_prop(batt_info, POWER_SUPPLY_PROP_TEMP_MIN) &&
+		    smb_batt_info_has_prop(batt_info, POWER_SUPPLY_PROP_TEMP_MAX)) {
+			rc = regmap_update_bits(chip->regmap,
+						chip->base + JEITA_EN_CFG,
+						JEITA_EN_HARDLIMIT_BIT,
+						JEITA_EN_HARDLIMIT_BIT);
+			if (rc < 0) {
+				rc = dev_err_probe(chip->dev, rc,
+						   "could not enable JEITA hard limits\n");
+				goto out_put_batt_info;
+			}
+		}
+
 		if (program_float_voltage)
 			dev_info(chip->dev,
 				 "charge limits: float=%u uV fast=%u uA input=%u uA\n",
