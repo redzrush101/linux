@@ -1825,6 +1825,11 @@ struct wmi_tlv_pdev_set_param_cmd {
 	__le32 param_value;
 } __packed;
 
+struct wmi_tlv_pdev_set_base_macaddr_cmd {
+	__le32 pdev_id;
+	struct wmi_mac_addr base_macaddr;
+} __packed;
+
 struct wmi_tlv_pdev_set_rd_cmd {
 	__le32 pdev_id; /* not used yet */
 	__le32 regd;
