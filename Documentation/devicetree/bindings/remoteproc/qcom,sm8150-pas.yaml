@@ -24,6 +24,10 @@ properties:
           - enum:
               - qcom,qcs615-cdsp-pas
           - const: qcom,sm8150-cdsp-pas
+      - items:
+          - enum:
+              - qcom,qcs615-mpss-pas
+          - const: qcom,sm8150-mpss-pas
       - enum:
           - qcom,sc8180x-adsp-pas
           - qcom,sc8180x-cdsp-pas
@@ -145,9 +149,10 @@ allOf:
   - if:
       properties:
         compatible:
-          enum:
-            - qcom,sc8180x-mpss-pas
-            - qcom,sm8150-mpss-pas
+          contains:
+            enum:
+              - qcom,sc8180x-mpss-pas
+              - qcom,sm8150-mpss-pas
     then:
       properties:
         power-domains:
