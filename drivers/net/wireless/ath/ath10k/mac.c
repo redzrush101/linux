@@ -1470,6 +1470,73 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
 	}
 }
 
+/* WCN3990 firmware fails to start a station vdev (vdev start response status
+ * -1) unless the peer of the BSS already exists. mac80211 starts the vdev
+ * when it assigns the channel context and only adds the AP station after
+ * that, so create the BSS peer here; ath10k_sta_state() adopts it.
+ */
+static int ath10k_mac_bss_peer_create(struct ath10k_vif *arvif)
+{
+	struct ath10k *ar = arvif->ar;
+	const u8 *bssid = arvif->vif->bss_conf.bssid;
+	bool exists;
+	int ret;
+
+	if (!QCA_REV_WCN3990(ar) || arvif->vdev_type != WMI_VDEV_TYPE_STA ||
+	    !bssid || !is_valid_ether_addr(bssid))
+		return 0;
+
+	spin_lock_bh(&ar->data_lock);
+	exists = ath10k_peer_find(ar, arvif->vdev_id, bssid);
+	spin_unlock_bh(&ar->data_lock);
+
+	if (exists)
+		return 0;
+
+	ret = ath10k_peer_create(ar, arvif->vif, NULL, arvif->vdev_id, bssid,
+				 WMI_PEER_TYPE_DEFAULT);
+	if (ret)
+		ath10k_warn(ar, "failed to create bss peer %pM for vdev %i: %d\n",
+			    bssid, arvif->vdev_id, ret);
+
+	return ret;
+}
+
+/* Delete a BSS peer created by ath10k_mac_bss_peer_create() that was never
+ * adopted by a station, e.g. because the connection attempt failed.
+ */
+static void ath10k_mac_bss_peer_cleanup(struct ath10k_vif *arvif)
+{
+	struct ath10k *ar = arvif->ar;
+	struct ath10k_peer *peer;
+	u8 addr[ETH_ALEN];
+	bool found = false;
+	int ret;
+
+	if (!QCA_REV_WCN3990(ar) || arvif->vdev_type != WMI_VDEV_TYPE_STA)
+		return;
+
+	spin_lock_bh(&ar->data_lock);
+	list_for_each_entry(peer, &ar->peers, list) {
+		if (peer->vdev_id != arvif->vdev_id || peer->sta ||
+		    ether_addr_equal(peer->addr, arvif->vif->addr))
+			continue;
+
+		ether_addr_copy(addr, peer->addr);
+		found = true;
+		break;
+	}
+	spin_unlock_bh(&ar->data_lock);
+
+	if (!found)
+		return;
+
+	ret = ath10k_peer_delete(ar, arvif->vdev_id, addr);
+	if (ret)
+		ath10k_warn(ar, "failed to delete bss peer %pM for vdev %i: %d\n",
+			    addr, arvif->vdev_id, ret);
+}
+
 static int ath10k_vdev_stop(struct ath10k_vif *arvif)
 {
 	struct ath10k *ar = arvif->ar;
@@ -1500,6 +1567,8 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
 		ar->num_started_vdevs--;
 		ath10k_recalc_radar_detection(ar);
 	}
+
+	ath10k_mac_bss_peer_cleanup(arvif);
 
 	return ret;
 }
@@ -1548,6 +1617,12 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
 		   "mac vdev %d start center_freq %d phymode %s\n",
 		   arg.vdev_id, arg.channel.freq,
 		   ath10k_wmi_phymode_str(arg.channel.mode));
+
+	if (!restart) {
+		ret = ath10k_mac_bss_peer_create(arvif);
+		if (ret)
+			return ret;
+	}
 
 	if (restart)
 		ret = ath10k_wmi_vdev_restart(ar, &arg);
@@ -7567,8 +7642,19 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
 			}
 		}
 
-		ret = ath10k_peer_create(ar, vif, sta, arvif->vdev_id,
-					 sta->addr, peer_type);
+		/* The BSS peer may already exist, see
+		 * ath10k_mac_bss_peer_create().
+		 */
+		spin_lock_bh(&ar->data_lock);
+		peer = ath10k_peer_find(ar, arvif->vdev_id, sta->addr);
+		if (peer)
+			peer->sta = sta;
+		spin_unlock_bh(&ar->data_lock);
+
+		ret = 0;
+		if (!peer)
+			ret = ath10k_peer_create(ar, vif, sta, arvif->vdev_id,
+						 sta->addr, peer_type);
 		if (ret) {
 			ath10k_warn(ar, "failed to add peer %pM for vdev %d when adding a new sta: %i\n",
 				    sta->addr, arvif->vdev_id, ret);
