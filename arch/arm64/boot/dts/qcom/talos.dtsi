@@ -2081,7 +2081,7 @@
 		adreno_smmu: iommu@50a0000 {
 			compatible = "qcom,qcs615-smmu-500", "qcom,adreno-smmu",
 				     "qcom,smmu-500", "arm,mmu-500";
-			reg = <0x0 0x050a0000 0x0 0x40000>;
+			reg = <0x0 0x050a0000 0x0 0x10000>;
 			#iommu-cells = <2>;
 			#global-interrupts = <1>;
 			interrupts = <GIC_SPI 585 IRQ_TYPE_LEVEL_HIGH 0>,
