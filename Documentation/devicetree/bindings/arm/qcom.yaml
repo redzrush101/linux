@@ -1344,6 +1344,7 @@ allOf:
               - qcom,msm8994
               - qcom,msm8996
               - qcom,msm8998
+              - qcom,palawan
               - qcom,sdm450
               - qcom,sdm630
               - qcom,sdm632
