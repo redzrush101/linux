@@ -216,6 +216,7 @@ properties:
       - items:
           - enum:
               - qcom,palawan-qrd
+              - xiaomi,peridot
           - const: qcom,palawan
 
       - items:
