@@ -655,6 +655,18 @@ static void aw88261_start(struct aw88261 *aw88261)
 	aw88261_start_pa(aw88261);
 }
 
+/*
+ * The PLL locks only once the bit clock runs. Some DAIs start their clocks at
+ * trigger time, after the DAPM power up, so start the amplifier from a work.
+ */
+static void aw88261_startup_work(struct work_struct *work)
+{
+	struct aw88261 *aw88261 = container_of(work, struct aw88261, start_work.work);
+
+	guard(mutex)(&aw88261->lock);
+	aw88261_start(aw88261);
+}
+
 static int aw88261_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
 {
 	struct snd_soc_component *component = dai->component;
@@ -1040,7 +1052,7 @@ static int aw88261_playback_event(struct snd_soc_dapm_widget *w,
 	guard(mutex)(&aw88261->lock);
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
-		aw88261_start(aw88261);
+		queue_delayed_work(system_dfl_wq, &aw88261->start_work, 0);
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 		aw88261_dev_stop(aw88261->aw_pa);
@@ -1200,6 +1212,8 @@ static int aw88261_codec_probe(struct snd_soc_component *component)
 	struct aw88261 *aw88261 = snd_soc_component_get_drvdata(component);
 	int ret;
 
+	INIT_DELAYED_WORK(&aw88261->start_work, aw88261_startup_work);
+
 	ret = aw88261_request_firmware_file(aw88261);
 	if (ret)
 		return dev_err_probe(aw88261->aw_pa->dev, ret,
@@ -1223,8 +1237,16 @@ static int aw88261_codec_probe(struct snd_soc_component *component)
 	return ret;
 }
 
+static void aw88261_codec_remove(struct snd_soc_component *component)
+{
+	struct aw88261 *aw88261 = snd_soc_component_get_drvdata(component);
+
+	cancel_delayed_work_sync(&aw88261->start_work);
+}
+
 static const struct snd_soc_component_driver soc_codec_dev_aw88261 = {
 	.probe = aw88261_codec_probe,
+	.remove = aw88261_codec_remove,
 };
 
 static void aw88261_parse_channel_dt(struct aw88261 *aw88261)
