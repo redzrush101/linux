@@ -201,6 +201,7 @@ struct ath11k_hw_params {
 	bool credit_flow;
 	const struct ath11k_hw_hal_params *hal_params;
 	bool supports_dynamic_smps_6ghz;
+	bool supports_5ghz_160mhz;
 	bool alloc_cacheable_memory;
 	bool supports_rssi_stats;
 	bool fw_wmi_diag_event;

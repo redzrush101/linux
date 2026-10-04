@@ -5733,6 +5733,11 @@ ath11k_create_vht_cap(struct ath11k *ar, u32 rate_cap_tx_chainmask,
 	vht_cap.vht_supported = 1;
 	vht_cap.cap = ar->pdev->cap.vht_cap;
 
+	if (!ar->ab->hw_params.supports_5ghz_160mhz)
+		vht_cap.cap &= ~(IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK |
+				 IEEE80211_VHT_CAP_SHORT_GI_160 |
+				 IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
+
 	if (ar->pdev->cap.nss_ratio_enabled)
 		vht_cap.vht_mcs.tx_highest |=
 			cpu_to_le16(IEEE80211_VHT_EXT_NSS_BW_CAPABLE);
@@ -6001,6 +6006,12 @@ static int ath11k_mac_copy_he_cap(struct ath11k *ar,
 		       sizeof(he_cap_elem->mac_cap_info));
 		memcpy(he_cap_elem->phy_cap_info, band_cap->he_cap_phy_info,
 		       sizeof(he_cap_elem->phy_cap_info));
+
+		if (band == NL80211_BAND_5GHZ &&
+		    !ar->ab->hw_params.supports_5ghz_160mhz)
+			he_cap_elem->phy_cap_info[0] &=
+				~(IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G |
+				  IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G);
 
 		he_cap_elem->mac_cap_info[1] &=
 			IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_MASK;
