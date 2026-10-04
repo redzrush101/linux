@@ -11,6 +11,7 @@
 #include <linux/cleanup.h>
 #include <linux/i2c.h>
 #include <linux/firmware.h>
+#include <linux/gpio/consumer.h>
 #include <linux/bitops.h>
 #include <linux/regmap.h>
 #include <linux/regulator/consumer.h>
@@ -1247,6 +1248,18 @@ static int aw88261_init(struct aw88261 *aw88261, struct i2c_client *i2c, struct 
 	ret = devm_regulator_get_enable(&i2c->dev, "dvdd");
 	if (ret)
 		return dev_err_probe(&i2c->dev, ret, "Failed to enable dvdd supply\n");
+
+	/* Keep the amplifier in reset until its supply is stable */
+	aw88261->reset_gpio = devm_gpiod_get_optional(&i2c->dev, "reset", GPIOD_OUT_HIGH);
+	if (IS_ERR(aw88261->reset_gpio))
+		return dev_err_probe(&i2c->dev, PTR_ERR(aw88261->reset_gpio),
+				     "Failed to get reset gpio\n");
+
+	if (aw88261->reset_gpio) {
+		usleep_range(1000, 1100);
+		gpiod_set_value_cansleep(aw88261->reset_gpio, 0);
+		usleep_range(2000, 2100);
+	}
 
 	/* read chip id */
 	ret = regmap_read(regmap, AW88261_ID_REG, &chip_id);
