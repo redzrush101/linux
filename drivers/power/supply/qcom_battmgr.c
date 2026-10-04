@@ -35,6 +35,8 @@ enum qcom_battmgr_variant {
 #define NOTIF_BAT_PROPERTY		0x30
 #define NOTIF_USB_PROPERTY		0x32
 #define NOTIF_WLS_PROPERTY		0x34
+/* Xiaomi firmware: vendor specific charger status changed */
+#define NOTIF_XM_STATUS			0x50
 #define NOTIF_BAT_STATUS		0x80
 #define NOTIF_BAT_INFO			0x81
 #define NOTIF_BAT_CHARGING_STATE	0x83
@@ -99,6 +101,9 @@ enum qcom_battmgr_variant {
 #define WLS_BOOST_EN			6
 
 #define BATTMGR_CHG_CTRL_LIMIT_EN	0x48
+/* Xiaomi firmware: vendor specific charger status, sent unsolicited */
+#define BATTMGR_XM_STATUS		0x50
+
 #define CHARGE_CTRL_START_THR_MIN	50
 #define CHARGE_CTRL_START_THR_MAX	95
 #define CHARGE_CTRL_END_THR_MIN		55
@@ -1234,6 +1239,7 @@ static void qcom_battmgr_notification(struct qcom_battmgr *battmgr,
 	case NOTIF_BAT_STATUS:
 	case NOTIF_BAT_PROPERTY:
 	case NOTIF_BAT_CHARGING_STATE:
+	case NOTIF_XM_STATUS:
 		power_supply_changed(battmgr->bat_psy);
 		break;
 	case NOTIF_USB_PROPERTY:
@@ -1600,6 +1606,10 @@ static void qcom_battmgr_callback(const void *data, size_t len, void *priv)
 	const struct pmic_glink_hdr *hdr = data;
 	struct qcom_battmgr *battmgr = priv;
 	unsigned int opcode = le32_to_cpu(hdr->opcode);
+
+	/* Not a response, so it must not complete a pending request */
+	if (opcode == BATTMGR_XM_STATUS)
+		return;
 
 	if (opcode == BATTMGR_NOTIFICATION)
 		qcom_battmgr_notification(battmgr, data, len);
