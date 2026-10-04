@@ -35,7 +35,7 @@ properties:
     description: VDD_AON supply regulator handle
 
   vddasd-supply:
-    description: VDD_ASD supply regulator handle
+    description: VDD_ASD supply regulator handle, when externally supplied
 
   vdddig-supply:
     description: VDD_DIG supply regulator handle
@@ -146,7 +146,6 @@ allOf:
     then:
       required:
         - vddaon-supply
-        - vddasd-supply
         - vddpmu-supply
         - vddrfa0p8-supply
         - vddrfa1p2-supply
