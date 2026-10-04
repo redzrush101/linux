@@ -22,6 +22,8 @@ struct q6apm_graph;
 #define MODULE_ID_PLACEHOLDER_DECODER	0x07001009
 #define MODULE_ID_I2S_SINK		0x0700100A
 #define MODULE_ID_I2S_SOURCE		0x0700100B
+#define MODULE_ID_TDM_SINK		0x0700100E
+#define MODULE_ID_TDM_SOURCE		0x0700100F
 #define MODULE_ID_SAL			0x07001010
 #define MODULE_ID_MFC			0x07001015
 #define MODULE_ID_DATA_LOGGING		0x0700101A
@@ -530,6 +532,39 @@ struct param_id_i2s_intf_cfg {
 	uint32_t intf_idx;
 	uint16_t sd_line_idx;
 	uint16_t ws_src;
+} __packed;
+
+#define PARAM_ID_TDM_INTF_CFG			0x0800101B
+
+#define TDM_SYNC_SRC_EXTERNAL			0x0
+#define TDM_SYNC_SRC_INTERNAL			0x1
+
+/*
+ * struct param_id_tdm_intf_cfg - TDM interface configuration
+ * @lpaif_type: LPASS audio interface type (LPAIF, RXTX, WSA, VA, ...)
+ * @intf_idx: Interface instance index
+ * @sync_src: Frame sync source, internal or external
+ * @ctrl_data_out_enable: Enable sharing of the data-out signal
+ * @slot_mask: Bitmask of active slots
+ * @nslots_per_frame: Number of slots per frame
+ * @slot_width: Width of each slot in bits
+ * @sync_mode: Frame sync mode (short bit, long, short slot)
+ * @ctrl_invert_sync_pulse: Invert the frame sync pulse
+ * @ctrl_sync_data_delay: Data delay from frame sync in bit clocks
+ * @reserved: Must be zero
+ */
+struct param_id_tdm_intf_cfg {
+	u32 lpaif_type;
+	u32 intf_idx;
+	u16 sync_src;
+	u16 ctrl_data_out_enable;
+	u32 slot_mask;
+	u16 nslots_per_frame;
+	u16 slot_width;
+	u16 sync_mode;
+	u16 ctrl_invert_sync_pulse;
+	u16 ctrl_sync_data_delay;
+	u16 reserved;
 } __packed;
 
 #define I2S_INTF_TYPE_PRIMARY		0
