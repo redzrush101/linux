@@ -2060,6 +2060,13 @@ out:
 		if (retries < MAX_INIT_RETRIES) {
 			bt_dev_warn(hdev, "Retry BT power ON:%d", retries);
 			if (hu->serdev) {
+				/*
+				 * A controller that never became ready leaves
+				 * the command in the UART, held off by flow
+				 * control. Drop it, or closing the port waits
+				 * for it to drain until closing_wait expires.
+				 */
+				serdev_device_write_flush(hu->serdev);
 				serdev_device_close(hu->serdev);
 				ret = serdev_device_open(hu->serdev);
 				if (ret) {
