@@ -1908,8 +1908,14 @@ static int dsi_populate_dsc_params(struct msm_dsi_host *msm_host, struct drm_dsc
 	drm_dsc_set_const_params(dsc);
 	drm_dsc_set_rc_buf_thresh(dsc);
 
-	/* DPU supports only pre-SCR panels */
-	ret = drm_dsc_setup_rc_params(dsc, DRM_DSC_1_1_PRE_SCR);
+	/*
+	 * DSC 1.2 decoders use the RC parameters of the DSC 1.2 specification,
+	 * older panels expect the pre-SCR DSC 1.1 ones.
+	 */
+	if (dsc->dsc_version_major == 1 && dsc->dsc_version_minor >= 2)
+		ret = drm_dsc_setup_rc_params(dsc, DRM_DSC_1_2_444);
+	else
+		ret = drm_dsc_setup_rc_params(dsc, DRM_DSC_1_1_PRE_SCR);
 	if (ret) {
 		DRM_DEV_ERROR(&msm_host->pdev->dev, "could not find DSC RC parameters\n");
 		return ret;
