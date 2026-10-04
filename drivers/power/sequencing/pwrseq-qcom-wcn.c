@@ -346,6 +346,7 @@ static const struct pwrseq_qcom_wcn_pdata pwrseq_wcn3990_of_data = {
 };
 
 static const char *const pwrseq_wcn6750_vregs[] = {
+	"vddio",
 	"vddaon",
 	"vddasd",
 	"vddpmu",
