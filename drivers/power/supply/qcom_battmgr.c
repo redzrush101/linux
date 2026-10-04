@@ -313,6 +313,8 @@ struct qcom_battmgr {
 	struct pmic_glink_client *client;
 
 	enum qcom_battmgr_variant variant;
+	/* firmware has a constant charge current property before BATT_TEMP */
+	bool bat_prop_cc;
 
 	struct power_supply *ac_psy;
 	struct power_supply *bat_psy;
@@ -452,6 +454,29 @@ static const u8 sm8350_bat_prop_map[] = {
 	[POWER_SUPPLY_PROP_CHARGE_CONTROL_END_THRESHOLD] = BATT_CHG_CTRL_END_THR,
 };
 
+/*
+ * Some firmware has an extra battery property for the constant charge current
+ * at the index of BATT_TEMP, which moves BATT_TEMP and all later properties up
+ * by one.
+ */
+static unsigned int qcom_battmgr_bat_prop_to_fw(struct qcom_battmgr *battmgr,
+						unsigned int prop)
+{
+	if (battmgr->bat_prop_cc && prop >= BATT_TEMP)
+		return prop + 1;
+
+	return prop;
+}
+
+static unsigned int qcom_battmgr_bat_prop_from_fw(struct qcom_battmgr *battmgr,
+						  unsigned int prop)
+{
+	if (battmgr->bat_prop_cc && prop > BATT_TEMP)
+		return prop - 1;
+
+	return prop;
+}
+
 static int qcom_battmgr_bat_sm8350_update(struct qcom_battmgr *battmgr,
 					  enum power_supply_property psp)
 {
@@ -461,7 +486,7 @@ static int qcom_battmgr_bat_sm8350_update(struct qcom_battmgr *battmgr,
 	if (psp >= ARRAY_SIZE(sm8350_bat_prop_map))
 		return -EINVAL;
 
-	prop = sm8350_bat_prop_map[psp];
+	prop = qcom_battmgr_bat_prop_to_fw(battmgr, sm8350_bat_prop_map[psp]);
 
 	mutex_lock(&battmgr->lock);
 	ret = qcom_battmgr_request_property(battmgr, BATTMGR_BAT_PROPERTY_GET, prop, 0);
@@ -1381,7 +1406,8 @@ static void qcom_battmgr_sm8350_callback(struct qcom_battmgr *battmgr,
 
 	switch (opcode) {
 	case BATTMGR_BAT_PROPERTY_GET:
-		property = le32_to_cpu(resp->intval.property);
+		property = qcom_battmgr_bat_prop_from_fw(battmgr,
+							 le32_to_cpu(resp->intval.property));
 		if (property == BATT_MODEL_NAME) {
 			if (payload_len != sizeof(resp->strval)) {
 				dev_warn(battmgr->dev,
@@ -1657,6 +1683,9 @@ static int qcom_battmgr_probe(struct auxiliary_device *adev,
 		battmgr->variant = (unsigned long)match->data;
 	else
 		battmgr->variant = QCOM_BATTMGR_SM8350;
+
+	battmgr->bat_prop_cc = device_is_compatible(dev->parent,
+						    "qcom,palawan-pmic-glink");
 
 	ret = qcom_battmgr_charge_control_thresholds_init(battmgr);
 	if (ret < 0)
