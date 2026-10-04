@@ -92,6 +92,7 @@ static const struct tz_cp_config tz_cp_config_vpu3[] = {
  * - clk_rst_tbl to sm8650_clk_reset_table
  * - controller_rst_tbl to sm8650_controller_reset_table
  * - inst_caps to platform_inst_cap_palawan
+ * - num_vpp_pipe to 2
  */
 const struct iris_platform_data palawan_data = {
 	.firmware_desc_gen2 = &iris_vpu33_p4_gen2_desc,
@@ -118,7 +119,7 @@ const struct iris_platform_data palawan_data = {
 	.inst_caps = &platform_inst_cap_palawan,
 	.tz_cp_config_data = tz_cp_config_vpu3,
 	.tz_cp_config_data_size = ARRAY_SIZE(tz_cp_config_vpu3),
-	.num_vpp_pipe = 4,
+	.num_vpp_pipe = 2,
 	.max_session_count = 16,
 	.max_core_mbpf = NUM_MBS_8K * 2,
 	.max_core_mbps = ((7680 * 4320) / 256) * 60,
