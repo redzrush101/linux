@@ -11,6 +11,8 @@
 #ifndef __AW88261_H__
 #define __AW88261_H__
 
+#include <linux/workqueue.h>
+
 #define AW88261_ID_REG			(0x00)
 #define AW88261_SYSST_REG		(0x01)
 #define AW88261_SYSINT_REG		(0x02)
@@ -584,6 +586,8 @@ enum {
 struct aw88261 {
 	struct aw_device *aw_pa;
 	struct mutex lock;
+	struct delayed_work start_work;
+	bool playback_active;
 	struct gpio_desc *reset_gpio;
 	struct regmap *regmap;
 	struct aw_container *aw_cfg;
