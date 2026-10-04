@@ -883,7 +883,8 @@ static int aw_dev_parse_dev_type_v1(struct aw_device *aw_dev,
 	for (i = 0; i < prof_hdr->ddt_num; i++) {
 		if ((aw_dev->i2c->adapter->nr == cfg_dde[i].dev_bus) &&
 		    (aw_dev->i2c->addr == cfg_dde[i].dev_addr) &&
-		    (aw_dev->chip_id == cfg_dde[i].chip_id)) {
+		    (aw_dev->chip_id == cfg_dde[i].chip_id) &&
+		    (cfg_dde[i].data_type != ACF_SEC_TYPE_MONITOR)) {
 			ret = aw_dev_parse_data_by_sec_type_v1(aw_dev, prof_hdr,
 							&cfg_dde[i], &cur_scene_id);
 			if (ret < 0) {
@@ -912,7 +913,8 @@ static int aw_dev_parse_default_type_v1(struct aw_device *aw_dev,
 
 	for (i = 0; i < prof_hdr->ddt_num; i++) {
 		if ((aw_dev->channel == cfg_dde[i].dev_index) &&
-			(aw_dev->chip_id == cfg_dde[i].chip_id)) {
+			(aw_dev->chip_id == cfg_dde[i].chip_id) &&
+			(cfg_dde[i].data_type != ACF_SEC_TYPE_MONITOR)) {
 			ret = aw_dev_parse_data_by_sec_type_v1(aw_dev, prof_hdr,
 							&cfg_dde[i], &cur_scene_id);
 			if (ret < 0) {
