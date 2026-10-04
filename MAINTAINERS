@@ -8349,6 +8349,13 @@ T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
 F:	Documentation/devicetree/bindings/display/panel/novatek,nt36672a.yaml
 F:	drivers/gpu/drm/panel/panel-novatek-nt36672a.c
 
+DRM DRIVER FOR NOVATEK NT37706 PANELS
+M:	Yassin Rezai <yassinrsocial@proton.me>
+S:	Maintained
+T:	git https://gitlab.freedesktop.org/drm/misc/kernel.git
+F:	Documentation/devicetree/bindings/display/panel/novatek,nt37706.yaml
+F:	drivers/gpu/drm/panel/panel-novatek-nt37706.c
+
 DRM DRIVER FOR NOVATEK NT37801 PANELS
 M:	Krzysztof Kozlowski <krzk@kernel.org>
 S:	Maintained
