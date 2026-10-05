@@ -17,9 +17,9 @@ $ref: /schemas/display/msm/mdss-common.yaml#
 
 properties:
   compatible:
-    items:
-      - const: qcom,palawan-mdss
-      - const: qcom,sm8650-mdss
+    enum:
+      - qcom,palawan-mdss
+      - qcom,sm8650-mdss
 
   clocks:
     items:
@@ -46,19 +46,19 @@ patternProperties:
     additionalProperties: true
     properties:
       compatible:
-        items:
-          - const: qcom,palawan-dpu
-          - const: qcom,sm8650-dpu
+        enum:
+          - qcom,palawan-dpu
+          - qcom,sm8650-dpu
 
   "^displayport-controller@[0-9a-f]+$":
     type: object
     additionalProperties: true
     properties:
       compatible:
-        oneOF:
+        oneOf:
           - items:
-              - enum:
-                  - qcom,palawan-dp
+              - const: qcom,palawan-dp
+              - const: qcom,sm8650-dp
           - const: qcom,sm8650-dp
 
   "^dsi@[0-9a-f]+$":
@@ -67,8 +67,9 @@ patternProperties:
     properties:
       compatible:
         items:
-          - const: qcom,palawan-dsi-ctrl
-          - const: qcom,sm8650-dsi-ctrl
+          - enum:
+              - qcom,palawan-dsi-ctrl
+              - qcom,sm8650-dsi-ctrl
           - const: qcom,mdss-dsi-ctrl
 
   "^phy@[0-9a-f]+$":
@@ -76,10 +77,10 @@ patternProperties:
     additionalProperties: true
     properties:
       compatible:
-        oneOF:
+        oneOf:
           - items:
-              - enum:
-                  - qcom,palawan-dsi-phy-4nm
+              - const: qcom,palawan-dsi-phy-4nm
+              - const: qcom,sm8650-dsi-phy-4nm
           - const: qcom,sm8650-dsi-phy-4nm
 
 required:
