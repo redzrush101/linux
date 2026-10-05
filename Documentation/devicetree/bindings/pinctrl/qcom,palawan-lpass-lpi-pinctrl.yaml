@@ -15,10 +15,7 @@ description:
 
 properties:
   compatible:
-    oneOf:
-      - const: qcom,palawan-lpass-lpi-pinctrl
-      - items:
-          - const: qcom,palawan-lpass-lpi-pinctrl
+    const: qcom,palawan-lpass-lpi-pinctrl
 
   reg:
     items:
@@ -58,15 +55,15 @@ $defs:
           List of gpio pins affected by the properties specified in this
           subnode.
         items:
-          pattern: "^gpio([0-9]|1[0-8])$"
+          pattern: "^gpio([0-9]|1[0-4]|19|2[0-2])$"
 
       function:
         enum: [ dmic1_clk, dmic1_data, dmic2_clk, dmic2_data, dmic3_clk,
                 dmic3_data, dmic4_clk, dmic4_data, ext_mclk1_a, ext_mclk1_b,
                 ext_mclk1_c, ext_mclk1_d, ext_mclk1_e, gpio, i2s0_clk,
                 i2s0_data, i2s0_ws, i2s1_clk, i2s1_data, i2s1_ws, i2s2_clk,
-                i2s2_data, i2s2_ws, i2s3_clk, i2s3_data, i2s3_ws, qca_swr_clk,
-                qca_swr_data, slimbus_clk, slimbus_data, swr_rx_clk, swr_rx_data,
+                i2s2_data, i2s2_ws, i2s3_clk, i2s3_data, i2s3_ws,
+                slimbus_clk, slimbus_data, swr_rx_clk, swr_rx_data,
                 swr_tx_clk, swr_tx_data, wsa_swr_clk, wsa_swr_data ]
         description:
           Specify the alternative function to be configured for the specified
