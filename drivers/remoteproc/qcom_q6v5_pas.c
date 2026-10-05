@@ -277,10 +277,19 @@ static int qcom_pas_map_carveout(struct rproc *rproc, phys_addr_t mem_phys, size
 	return ret;
 }
 
+static int qcom_pas_assign_memory_region(struct qcom_pas *pas);
+static int qcom_pas_unassign_memory_region(struct qcom_pas *pas);
+
 static int qcom_pas_start(struct rproc *rproc)
 {
 	struct qcom_pas *pas = rproc->priv;
 	int ret;
+
+	ret = qcom_pas_assign_memory_region(pas);
+	if (ret) {
+		qcom_pas_unassign_memory_region(pas);
+		return ret;
+	}
 
 	ret = qcom_q6v5_prepare(&pas->q6v5);
 	if (ret)
@@ -436,8 +445,16 @@ static int qcom_pas_stop(struct rproc *rproc)
 	if (handover)
 		qcom_pas_handover(&pas->q6v5);
 
-	if (pas->smem_host_id)
-		ret = qcom_smem_bust_hwspin_lock_by_host(pas->smem_host_id);
+	if (pas->smem_host_id) {
+		int hwspin_ret = qcom_smem_bust_hwspin_lock_by_host(pas->smem_host_id);
+
+		if (!ret)
+			ret = hwspin_ret;
+	}
+
+	/* Reclaim exclusive DSM regions before the next subsystem boot. */
+	if (!ret)
+		ret = qcom_pas_unassign_memory_region(pas);
 
 	return ret;
 }
@@ -757,6 +774,12 @@ static int qcom_pas_assign_memory_region(struct qcom_pas *pas)
 
 	for (offset = 0; offset < pas->region_assign_count; ++offset) {
 		struct resource res;
+		u64 owners = BIT(pas->region_assign_vmid);
+
+		if (pas->region_assign_shared)
+			owners |= BIT(QCOM_SCM_VMID_HLOS);
+		if (pas->region_assign_owners[offset] == owners)
+			continue;
 
 		ret = of_reserved_mem_region_to_resource(pas->dev->of_node,
 							 pas->region_assign_idx + offset,
@@ -781,7 +804,8 @@ static int qcom_pas_assign_memory_region(struct qcom_pas *pas)
 
 		pas->region_assign_phys[offset] = res.start;
 		pas->region_assign_size[offset] = resource_size(&res);
-		pas->region_assign_owners[offset] = BIT(QCOM_SCM_VMID_HLOS);
+		if (!pas->region_assign_owners[offset])
+			pas->region_assign_owners[offset] = BIT(QCOM_SCM_VMID_HLOS);
 
 		ret = qcom_scm_assign_mem(pas->region_assign_phys[offset],
 					  pas->region_assign_size[offset],
@@ -796,16 +820,21 @@ static int qcom_pas_assign_memory_region(struct qcom_pas *pas)
 	return 0;
 }
 
-static void qcom_pas_unassign_memory_region(struct qcom_pas *pas)
+static int qcom_pas_unassign_memory_region(struct qcom_pas *pas)
 {
 	struct qcom_scm_vmperm perm;
 	int offset;
+	int err = 0;
 	int ret;
 
 	if (!pas->region_assign_idx || pas->region_assign_shared)
-		return;
+		return 0;
 
 	for (offset = 0; offset < pas->region_assign_count; ++offset) {
+		if (!pas->region_assign_owners[offset] ||
+		    pas->region_assign_owners[offset] == BIT(QCOM_SCM_VMID_HLOS))
+			continue;
+
 		perm.vmid = QCOM_SCM_VMID_HLOS;
 		perm.perm = QCOM_SCM_PERM_RW;
 
@@ -813,9 +842,14 @@ static void qcom_pas_unassign_memory_region(struct qcom_pas *pas)
 					  pas->region_assign_size[offset],
 					  &pas->region_assign_owners[offset],
 					  &perm, 1);
-		if (ret < 0)
+		if (ret < 0) {
 			dev_err(pas->dev, "unassign memory %d failed\n", offset);
+			if (!err)
+				err = ret;
+		}
 	}
+
+	return err;
 }
 
 static int qcom_pas_probe(struct platform_device *pdev)
@@ -893,7 +927,7 @@ static int qcom_pas_probe(struct platform_device *pdev)
 
 	ret = qcom_pas_assign_memory_region(pas);
 	if (ret)
-		goto free_rproc;
+		goto unassign_mem;
 
 	ret = qcom_pas_init_clock(pas);
 	if (ret)
