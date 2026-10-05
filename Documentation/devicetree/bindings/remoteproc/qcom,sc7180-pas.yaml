@@ -16,6 +16,7 @@ description:
 properties:
   compatible:
     enum:
+      - qcom,palawan-wpss-pas
       - qcom,sc7180-adsp-pas
       - qcom,sc7180-mpss-pas
       - qcom,sc7280-adsp-pas
@@ -157,6 +158,7 @@ allOf:
         compatible:
           enum:
             - qcom,sc7280-cdsp-pas
+            - qcom,palawan-wpss-pas
             - qcom,sc7280-wpss-pas
     then:
       properties:
