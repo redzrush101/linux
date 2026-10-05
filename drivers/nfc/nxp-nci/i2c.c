@@ -20,6 +20,7 @@
 #include <linux/module.h>
 #include <linux/nfc.h>
 #include <linux/gpio/consumer.h>
+#include <linux/regulator/consumer.h>
 #include <linux/unaligned.h>
 
 #include <net/nfc/nfc.h>
@@ -295,6 +296,10 @@ static int nxp_nci_i2c_probe(struct i2c_client *client)
 	r = devm_acpi_dev_add_driver_gpios(dev, acpi_nxp_nci_gpios);
 	if (r)
 		dev_dbg(dev, "Unable to add GPIO mapping table\n");
+
+	r = devm_regulator_get_enable_optional(dev, "vdd");
+	if (r && r != -ENODEV)
+		return dev_err_probe(dev, r, "Failed to enable power supply\n");
 
 	phy->gpiod_en = devm_gpiod_get(dev, "enable", GPIOD_OUT_LOW);
 	if (IS_ERR(phy->gpiod_en)) {
