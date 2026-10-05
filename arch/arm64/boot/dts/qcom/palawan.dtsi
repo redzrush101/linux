@@ -2562,7 +2562,7 @@
 		};
 
 		ipa: ipa@3f40000 {
-			compatible = "qcom,palawan-ipa", "qcom,sm8550-ipa";
+			compatible = "qcom,palawan-ipa";
 
 			iommus = <&apps_smmu 0x4a0 0x0>,
 				<&apps_smmu 0x4a2 0x0>;
@@ -2600,6 +2600,9 @@
 					"ipa-clock-enabled";
 
 			sram = <&ipa_modem_tables>;
+
+			qcom,gsi-loader = "self";
+			memory-region = <&ipa_fw_mem>;
 
 			status = "disabled";
 		};
@@ -4311,8 +4314,8 @@
 
 			ranges = <0 0 0x14680000 0x2c000>;
 
-			ipa_modem_tables: modem-tables@8000 {
-				reg = <0x8000 0x2000>;
+			ipa_modem_tables: modem-tables@3000 {
+				reg = <0x3000 0x2000>;
 			};
 		};
 
