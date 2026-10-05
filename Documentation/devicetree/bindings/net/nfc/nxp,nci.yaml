@@ -19,6 +19,7 @@ properties:
               - nxp,pn547
               - nxp,pn553
               - nxp,pn557
+              - nxp,sn220
           - const: nxp,nxp-nci-i2c
 
   enable-gpios:
@@ -32,6 +33,9 @@ properties:
 
   reg:
     maxItems: 1
+
+  vdd-supply:
+    description: Controller power supply
 
 required:
   - compatible
