@@ -50,10 +50,8 @@ properties:
       - qcom,x1p42100-gpucc
 
   clocks:
-    items:
-      - description: Board XO source
-      - description: GPLL0 main branch source
-      - description: GPLL0 div branch source
+    minItems: 3
+    maxItems: 4
 
   power-domains:
     items:
@@ -72,6 +70,25 @@ required:
 
 allOf:
   - $ref: qcom,gcc.yaml#
+  - if:
+      properties:
+        compatible:
+          const: qcom,palawan-gpucc
+    then:
+      properties:
+        clocks:
+          items:
+            - description: Board XO source
+            - description: Board active XO source
+            - description: GPLL0 main branch source
+            - description: GPLL0 div branch source
+    else:
+      properties:
+        clocks:
+          items:
+            - description: Board XO source
+            - description: GPLL0 main branch source
+            - description: GPLL0 div branch source
   - if:
       properties:
         compatible:
