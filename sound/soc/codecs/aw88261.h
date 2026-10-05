@@ -587,6 +587,7 @@ struct aw88261 {
 	struct aw_device *aw_pa;
 	struct mutex lock;
 	struct delayed_work start_work;
+	bool playback_active;
 	struct gpio_desc *reset_gpio;
 	struct regmap *regmap;
 	struct aw_container *aw_cfg;

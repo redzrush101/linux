@@ -656,15 +656,46 @@ static void aw88261_start(struct aw88261 *aw88261)
 }
 
 /*
- * The PLL locks only once the bit clock runs. Some DAIs start their clocks at
- * trigger time, after the DAPM power up, so start the amplifier from a work.
+ * The PLL locks only once the bit clock runs. Queue this work from the playback
+ * trigger, since preparing a stream does not necessarily start its clocks.
  */
 static void aw88261_startup_work(struct work_struct *work)
 {
 	struct aw88261 *aw88261 = container_of(work, struct aw88261, start_work.work);
 
 	guard(mutex)(&aw88261->lock);
-	aw88261_start(aw88261);
+	if (READ_ONCE(aw88261->playback_active))
+		aw88261_start(aw88261);
+	else
+		aw88261_dev_stop(aw88261->aw_pa);
+}
+
+static int aw88261_trigger(struct snd_pcm_substream *substream, int cmd,
+			   struct snd_soc_dai *dai)
+{
+	struct aw88261 *aw88261 = snd_soc_component_get_drvdata(dai->component);
+
+	if (substream->stream != SNDRV_PCM_STREAM_PLAYBACK)
+		return 0;
+
+	switch (cmd) {
+	case SNDRV_PCM_TRIGGER_START:
+	case SNDRV_PCM_TRIGGER_RESUME:
+	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
+		WRITE_ONCE(aw88261->playback_active, true);
+		break;
+	case SNDRV_PCM_TRIGGER_STOP:
+	case SNDRV_PCM_TRIGGER_SUSPEND:
+	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+		WRITE_ONCE(aw88261->playback_active, false);
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	mod_delayed_work(system_dfl_wq, &aw88261->start_work, 0);
+
+	return 0;
 }
 
 static int aw88261_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
@@ -882,6 +913,7 @@ static const struct snd_soc_dai_ops aw88261_dai_ops = {
 	.set_fmt = aw88261_set_fmt,
 	.hw_params = aw88261_hw_params,
 	.set_tdm_slot = aw88261_set_tdm_slot,
+	.trigger = aw88261_trigger,
 };
 
 static struct snd_soc_dai_driver aw88261_dai[] = {
@@ -1049,17 +1081,11 @@ static int aw88261_playback_event(struct snd_soc_dapm_widget *w,
 	struct snd_soc_component *component = snd_soc_dapm_to_component(w->dapm);
 	struct aw88261 *aw88261 = snd_soc_component_get_drvdata(component);
 
+	WRITE_ONCE(aw88261->playback_active, false);
+	cancel_delayed_work_sync(&aw88261->start_work);
+
 	guard(mutex)(&aw88261->lock);
-	switch (event) {
-	case SND_SOC_DAPM_PRE_PMU:
-		queue_delayed_work(system_dfl_wq, &aw88261->start_work, 0);
-		break;
-	case SND_SOC_DAPM_POST_PMD:
-		aw88261_dev_stop(aw88261->aw_pa);
-		break;
-	default:
-		break;
-	}
+	aw88261_dev_stop(aw88261->aw_pa);
 
 	return 0;
 }
@@ -1068,7 +1094,7 @@ static const struct snd_soc_dapm_widget aw88261_dapm_widgets[] = {
 	 /* playback */
 	SND_SOC_DAPM_AIF_IN_E("AIF_RX", "Speaker_Playback", 0, 0, 0, 0,
 					aw88261_playback_event,
-					SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
+					SND_SOC_DAPM_POST_PMD),
 	SND_SOC_DAPM_OUTPUT("DAC Output"),
 
 	/* capture */
