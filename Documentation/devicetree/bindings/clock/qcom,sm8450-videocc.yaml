@@ -73,6 +73,7 @@ allOf:
           not:
             contains:
               enum:
+                - qcom,palawan-videocc
                 - qcom,sm8475-videocc
                 - qcom,sm8650-videocc
     then:

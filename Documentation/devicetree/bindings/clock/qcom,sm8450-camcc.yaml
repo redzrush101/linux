@@ -75,6 +75,7 @@ allOf:
           not:
             contains:
               enum:
+                - qcom,palawan-camcc
                 - qcom,sm8475-camcc
                 - qcom,sm8650-camcc
     then:
