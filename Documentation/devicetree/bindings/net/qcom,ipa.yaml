@@ -46,6 +46,7 @@ properties:
       - enum:
           - qcom,milos-ipa
           - qcom,msm8998-ipa
+          - qcom,palawan-ipa
           - qcom,sc7180-ipa
           - qcom,sc7280-ipa
           - qcom,sdm845-ipa
@@ -60,7 +61,6 @@ properties:
           - const: qcom,sc7180-ipa
       - items:
           - enum:
-              - qcom,palawan-ipa
               - qcom,sm8650-ipa
           - const: qcom,sm8550-ipa
 
