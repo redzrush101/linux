@@ -24,6 +24,7 @@ properties:
               - qcom,msm8976-dsi-ctrl
               - qcom,msm8996-dsi-ctrl
               - qcom,msm8998-dsi-ctrl
+              - qcom,palawan-dsi-ctrl
               - qcom,qcm2290-dsi-ctrl
               - qcom,sa8775p-dsi-ctrl
               - qcom,sar2130p-dsi-ctrl
