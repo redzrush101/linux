@@ -5020,18 +5020,18 @@
 			reg = <0 0x9bb00000 0 0x10000>;
 
 			interrupts-extended = <&intc GIC_SPI 200 IRQ_TYPE_EDGE_RISING 0>,
-                <&smp2p_wpss_in 0 IRQ_TYPE_EDGE_RISING>,
-                <&smp2p_wpss_in 2 IRQ_TYPE_EDGE_RISING>,
-                <&smp2p_wpss_in 1 IRQ_TYPE_EDGE_RISING>,
-                <&smp2p_wpss_in 3 IRQ_TYPE_EDGE_RISING>,
-                <&smp2p_wpss_in 7 IRQ_TYPE_EDGE_RISING>;
+					      <&smp2p_wpss_in 0 IRQ_TYPE_EDGE_RISING>,
+					      <&smp2p_wpss_in 1 IRQ_TYPE_EDGE_RISING>,
+					      <&smp2p_wpss_in 2 IRQ_TYPE_EDGE_RISING>,
+					      <&smp2p_wpss_in 3 IRQ_TYPE_EDGE_RISING>,
+					      <&smp2p_wpss_in 7 IRQ_TYPE_EDGE_RISING>;
 
 			interrupt-names = "wdog",
-				"fatal",
-				"handover",
-				"ready",
-				"stop-ack",
-				"shutdown-ack";
+					  "fatal",
+					  "ready",
+					  "handover",
+					  "stop-ack",
+					  "shutdown-ack";
 
 			clocks = <&rpmhcc RPMH_CXO_CLK>;
 			clock-names = "xo";
