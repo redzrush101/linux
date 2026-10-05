@@ -712,6 +712,25 @@
 	};
 };
 
+&i2c9 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	nfc@28 {
+		compatible = "nxp,sn220", "nxp,nxp-nci-i2c";
+		reg = <0x28>;
+
+		interrupts-extended = <&tlmm 61 IRQ_TYPE_LEVEL_HIGH>;
+		enable-gpios = <&tlmm 114 GPIO_ACTIVE_HIGH>;
+
+		vdd-supply = <&vreg_l5b_1p2>;
+
+		pinctrl-0 = <&nfc_irq_default>, <&nfc_enable_default>;
+		pinctrl-names = "default";
+	};
+};
+
 &i2c11 {
 	clock-frequency = <400000>;
 
@@ -1206,6 +1225,20 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
+	};
+
+	nfc_enable_default: nfc-enable-default-state {
+		pins = "gpio114", "gpio115";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	nfc_irq_default: nfc-irq-default-state {
+		pins = "gpio61";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
 	};
 
 	panel_reset_n_active: panel-reset-n-active-state {
