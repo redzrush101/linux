@@ -6607,9 +6607,13 @@ static int ath11k_mac_config_mon_status_default(struct ath11k *ar, bool enable)
 						       &tlv_filter);
 	}
 
-	if (enable && !ar->ab->hw_params.rxdma1_enable)
-		mod_timer(&ar->ab->mon_reap_timer, jiffies +
-			  msecs_to_jiffies(ATH11K_MON_TIMER_INTERVAL));
+	if (!ar->ab->hw_params.rxdma1_enable) {
+		if (enable)
+			mod_timer(&ar->ab->mon_reap_timer, jiffies +
+				  msecs_to_jiffies(ATH11K_MON_TIMER_INTERVAL));
+		else
+			timer_delete_sync(&ar->ab->mon_reap_timer);
+	}
 
 	return ret;
 }

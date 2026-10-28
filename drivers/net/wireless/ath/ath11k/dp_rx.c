@@ -5784,6 +5784,19 @@ int ath11k_dp_rx_pdev_mon_detach(struct ath11k *ar)
 
 int ath11k_dp_rx_pktlog_start(struct ath11k_base *ab)
 {
+	bool active = false;
+	int i;
+
+	/* The reap timer only runs while a radio is started */
+	rcu_read_lock();
+	for (i = 0; i < ab->num_radios; i++)
+		if (rcu_dereference(ab->pdevs_active[i]))
+			active = true;
+	rcu_read_unlock();
+
+	if (!active)
+		return 0;
+
 	/* start reap timer */
 	mod_timer(&ab->mon_reap_timer,
 		  jiffies + msecs_to_jiffies(ATH11K_MON_TIMER_INTERVAL));
