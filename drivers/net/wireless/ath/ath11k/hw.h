@@ -275,6 +275,8 @@ struct ath11k_hw_ops {
 	bool (*rx_desc_mac_addr2_valid)(struct hal_rx_desc *desc);
 	u8* (*rx_desc_mpdu_start_addr2)(struct hal_rx_desc *desc);
 	u32 (*get_ring_selector)(struct sk_buff *skb);
+	void (*rx_desc_get_crypto_hdr)(struct hal_rx_desc *desc, u8 *crypto_hdr,
+				       enum hal_encrypt_type enctype);
 };
 
 extern const struct ath11k_hw_ops ipq8074_ops;

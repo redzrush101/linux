@@ -1928,6 +1928,30 @@ static int ath11k_dp_rx_crypto_param_len(struct ath11k *ar,
 	return 0;
 }
 
+/* Restore the crypto header the hardware removed, so mac80211 can check
+ * the PN of group addressed frames.
+ */
+static void ath11k_dp_rx_h_push_crypto_hdr(struct ath11k *ar,
+					   struct sk_buff *msdu,
+					   const u8 *hdr_status_iv,
+					   enum hal_encrypt_type enctype)
+{
+	const struct ath11k_hw_ops *hw_ops = ar->ab->hw_params.hw_ops;
+	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
+	int len = ath11k_dp_rx_crypto_param_len(ar, enctype);
+	u8 crypto_hdr[IEEE80211_CCMP_HDR_LEN] = {};
+
+	if (WARN_ON_ONCE(len > sizeof(crypto_hdr)))
+		return;
+
+	if (hw_ops->rx_desc_get_crypto_hdr)
+		hw_ops->rx_desc_get_crypto_hdr(rxcb->rx_desc, crypto_hdr, enctype);
+	else
+		memcpy(crypto_hdr, hdr_status_iv, len);
+
+	memcpy(skb_push(msdu, len), crypto_hdr, len);
+}
+
 static int ath11k_dp_rx_crypto_icv_len(struct ath11k *ar,
 				       enum hal_encrypt_type enctype)
 {
@@ -2007,12 +2031,9 @@ static void ath11k_dp_rx_h_undecap_nwifi(struct ath11k *ar,
 		memcpy(decap_hdr, (uint8_t *)hdr, hdr_len);
 	}
 
-	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
-		memcpy(skb_push(msdu,
-				ath11k_dp_rx_crypto_param_len(ar, enctype)),
-		       (void *)hdr + hdr_len,
-		       ath11k_dp_rx_crypto_param_len(ar, enctype));
-	}
+	if (!(status->flag & RX_FLAG_IV_STRIPPED))
+		ath11k_dp_rx_h_push_crypto_hdr(ar, msdu, (u8 *)hdr + hdr_len,
+					       enctype);
 
 	if (!rxcb->is_first_msdu) {
 		memcpy(skb_push(msdu,
@@ -2149,12 +2170,9 @@ static void ath11k_dp_rx_h_undecap_eth(struct ath11k *ar,
 	hdr = (struct ieee80211_hdr *)first_hdr;
 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
 
-	if (!(status->flag & RX_FLAG_IV_STRIPPED)) {
-		memcpy(skb_push(msdu,
-				ath11k_dp_rx_crypto_param_len(ar, enctype)),
-		       (void *)hdr + hdr_len,
-		       ath11k_dp_rx_crypto_param_len(ar, enctype));
-	}
+	if (!(status->flag & RX_FLAG_IV_STRIPPED))
+		ath11k_dp_rx_h_push_crypto_hdr(ar, msdu, (u8 *)hdr + hdr_len,
+					       enctype);
 
 	memcpy(skb_push(msdu, hdr_len), hdr, hdr_len);
 

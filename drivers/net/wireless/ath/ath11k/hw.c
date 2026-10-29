@@ -431,6 +431,43 @@ static u8 *ath11k_hw_qcn9074_rx_desc_get_hdr_status(struct hal_rx_desc *desc)
 	return desc->u.qcn9074.hdr_status;
 }
 
+static void ath11k_hw_qcn9074_rx_desc_get_crypto_hdr(struct hal_rx_desc *desc,
+						     u8 *crypto_hdr,
+						     enum hal_encrypt_type enctype)
+{
+	struct rx_mpdu_start_qcn9074 *mpdu_start = &desc->u.qcn9074.mpdu_start;
+	u32 pn_lo = __le32_to_cpu(mpdu_start->pn[0]);
+	u32 pn_hi = __le32_to_cpu(mpdu_start->pn[1]);
+	u8 key_id = FIELD_GET(RX_MPDU_START_INFO12_KEY_ID,
+			      __le32_to_cpu(mpdu_start->info12));
+
+	switch (enctype) {
+	case HAL_ENCRYPT_TYPE_TKIP_NO_MIC:
+	case HAL_ENCRYPT_TYPE_TKIP_MIC:
+		crypto_hdr[0] = pn_lo >> 8;
+		crypto_hdr[1] = ((pn_lo >> 8) | 0x20) & 0x7f;
+		crypto_hdr[2] = pn_lo;
+		break;
+	case HAL_ENCRYPT_TYPE_CCMP_128:
+	case HAL_ENCRYPT_TYPE_CCMP_256:
+	case HAL_ENCRYPT_TYPE_GCMP_128:
+	case HAL_ENCRYPT_TYPE_AES_GCMP_256:
+		crypto_hdr[0] = pn_lo;
+		crypto_hdr[1] = pn_lo >> 8;
+		crypto_hdr[2] = 0;
+		break;
+	default:
+		return;
+	}
+
+	/* Key ID and Ext IV */
+	crypto_hdr[3] = ((key_id & 0x3) << 6) | 0x20;
+	crypto_hdr[4] = pn_lo >> 16;
+	crypto_hdr[5] = pn_lo >> 24;
+	crypto_hdr[6] = pn_hi;
+	crypto_hdr[7] = pn_hi >> 8;
+}
+
 static bool ath11k_hw_qcn9074_rx_desc_encrypt_valid(struct hal_rx_desc *desc)
 {
 	return __le32_to_cpu(desc->u.qcn9074.mpdu_start.info11) &
@@ -1138,6 +1175,7 @@ const struct ath11k_hw_ops wcn6750_ops = {
 	.rx_desc_mac_addr2_valid = ath11k_hw_ipq9074_rx_desc_mac_addr2_valid,
 	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq9074_rx_desc_mpdu_start_addr2,
 	.get_ring_selector = ath11k_hw_wcn6750_get_tcl_ring_selector,
+	.rx_desc_get_crypto_hdr = ath11k_hw_qcn9074_rx_desc_get_crypto_hdr,
 };
 
 /* IPQ5018 hw ops is similar to QCN9074 except for the dest ring remap */
